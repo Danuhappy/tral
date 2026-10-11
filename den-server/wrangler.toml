@@ -1,4 +1,4 @@
-name = "moy-den"
+name = "moy-den"  # сервер приложения «Мой день»
 main = "src/worker.js"
 compatibility_date = "2024-09-23"
 
