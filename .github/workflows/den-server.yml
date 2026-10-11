@@ -1,0 +1,65 @@
+name: "Мой день: сервер"
+on:
+  workflow_dispatch:
+  push:
+    branches: [main]
+    paths: ["den-server/src/**", "den-server/wrangler.toml", ".github/workflows/den-server.yml"]
+permissions:
+  contents: write
+concurrency: den-server
+jobs:
+  deploy:
+    runs-on: ubuntu-latest
+    env:
+      CLOUDFLARE_API_TOKEN: ${{ secrets.CLOUDFLARE_API_TOKEN }}
+      CLOUDFLARE_ACCOUNT_ID: ${{ secrets.CLOUDFLARE_ACCOUNT_ID }}
+    defaults:
+      run:
+        working-directory: den-server
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 22
+      - name: Проверка секретов
+        run: |
+          if [ -z "$CLOUDFLARE_API_TOKEN" ] || [ -z "$CLOUDFLARE_ACCOUNT_ID" ]; then
+            echo "::error::Добавь секреты CLOUDFLARE_API_TOKEN и CLOUDFLARE_ACCOUNT_ID в Settings → Secrets and variables → Actions"; exit 1; fi
+      - name: Установка wrangler
+        run: npm i --no-save wrangler@3
+      - name: База данных D1
+        run: |
+          ID=$(npx wrangler d1 list --json | node -e 'let s="";process.stdin.on("data",d=>s+=d).on("end",()=>{const a=JSON.parse(s);const d=a.find(x=>x.name==="moy-den");console.log(d?d.uuid:"")})')
+          if [ -z "$ID" ]; then
+            npx wrangler d1 create moy-den
+            ID=$(npx wrangler d1 list --json | node -e 'let s="";process.stdin.on("data",d=>s+=d).on("end",()=>{const a=JSON.parse(s);console.log(a.find(x=>x.name==="moy-den").uuid)})')
+          fi
+          sed -i "s/__D1_ID__/$ID/" wrangler.toml
+          echo "D1: $ID"
+      - name: Выкладка сервера
+        id: deploy
+        run: |
+          npx wrangler deploy 2>&1 | tee deploy.log
+          URL=$(grep -oE 'https://[a-zA-Z0-9.-]+\.workers\.dev' deploy.log | head -1)
+          echo "url=$URL" >> "$GITHUB_OUTPUT"
+          echo "Адрес сервера: $URL"
+      - name: Ключи уведомлений (один раз)
+        run: |
+          if npx wrangler secret list | grep -q VAPID_PRIVATE_JWK; then echo "ключи уже есть"; else
+            node -e '(async()=>{const k=await crypto.subtle.generateKey({name:"ECDSA",namedCurve:"P-256"},true,["sign"]);const j=await crypto.subtle.exportKey("jwk",k.privateKey);const r=Buffer.from(await crypto.subtle.exportKey("raw",k.publicKey)).toString("base64url");require("fs").writeFileSync("/tmp/priv",JSON.stringify(j));require("fs").writeFileSync("/tmp/pub",r)})()'
+            npx wrangler secret put VAPID_PRIVATE_JWK < /tmp/priv
+            npx wrangler secret put VAPID_PUBLIC < /tmp/pub
+            rm -f /tmp/priv /tmp/pub
+          fi
+      - name: Сообщить приложению адрес сервера
+        working-directory: .
+        run: |
+          URL="${{ steps.deploy.outputs.url }}"
+          [ -n "$URL" ] || { echo "::error::Не нашёл адрес сервера в выводе wrangler"; exit 1; }
+          curl -fsS "$URL/api/health"
+          echo "window.MOYDEN_API=\"$URL\";" > den/config.js
+          if ! git diff --quiet den/config.js; then
+            git config user.name "github-actions[bot]"
+            git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
+            git add den/config.js && git commit -m "Мой день: адрес сервера" && git push
+          fi
