@@ -1,0 +1,23 @@
+МОЙ ДЕНЬ — СЕРВЕР
+=================
+
+Сервер хранит записи, рассылает уведомления о задачах и отдаёт календарь для iPhone.
+Он работает бесплатно на Cloudflare и выкладывается сам через GitHub Actions
+(файл .github/workflows/den-server.yml) при каждом изменении этой папки.
+
+Что нужно один раз:
+1. Аккаунт на dash.cloudflare.com (бесплатный).
+2. В Cloudflare: Workers & Pages → открыть раздел один раз, чтобы появился адрес *.workers.dev.
+3. API-токен: My Profile → API Tokens → Create Token → шаблон «Edit Cloudflare Workers»,
+   добавить разрешение Account → D1 → Edit → Create Token. Скопировать токен.
+4. Account ID: на главной странице аккаунта справа (Account ID).
+5. В GitHub: репозиторий tral → Settings → Secrets and variables → Actions → New repository secret:
+     CLOUDFLARE_API_TOKEN  = токен из п.3
+     CLOUDFLARE_ACCOUNT_ID = ID из п.4
+6. GitHub → Actions → «Мой день: сервер» → Run workflow.
+   Через 1–2 минуты сервер заработает, а адрес сервера сам запишется в den/config.js.
+
+Файлы:
+  src/worker.js    — код сервера
+  wrangler.toml    — настройки (имя, база D1, запуск раз в минуту)
+  test/run.mjs     — проверки: node test/run.mjs <файл с ключами>

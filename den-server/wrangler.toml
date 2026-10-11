@@ -1,0 +1,18 @@
+name = "moy-den"
+main = "src/worker.js"
+compatibility_date = "2024-09-23"
+
+# Раз в минуту проверять, кому пора прислать напоминание
+[triggers]
+crons = ["* * * * *"]
+
+[vars]
+VAPID_SUBJECT = "https://danuhappy.github.io/tral/den/"
+
+# База данных. database_id подставляется после команды `wrangler d1 create moy-den`
+[[d1_databases]]
+binding = "DB"
+database_name = "moy-den"
+database_id = "__D1_ID__"
+
+# Ключи уведомлений VAPID_PRIVATE_JWK и VAPID_PUBLIC — секреты, их создаёт GitHub Actions при первой выкладке

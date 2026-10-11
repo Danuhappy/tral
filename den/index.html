@@ -13,6 +13,7 @@
 <link rel="manifest" href="manifest.webmanifest">
 <link rel="apple-touch-icon" href="icons/apple-touch-icon.png">
 <link rel="icon" type="image/png" sizes="32x32" href="icons/favicon-32.png">
+<script src="config.js"></script>
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
 <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Unbounded:wght@500;700&family=Manrope:wght@400;500;600;700;800&display=swap">
@@ -217,6 +218,15 @@ details.donebox[open] summary h2::after{content:"скрыть"}
 .bar .track{grid-column:1/-1;height:8px;background:var(--sunk);border-radius:99px;overflow:hidden}
 .bar[aria-pressed="true"] .track{background:var(--surface)}
 .bar .fill{height:100%;border-radius:99px}
+.keybox{display:flex;justify-content:space-between;align-items:center;gap:10px;flex-wrap:wrap;background:var(--sunk);border-radius:12px;padding:12px 14px;margin:6px 0 8px}
+.keybox span{font-size:13px;color:var(--muted);font-weight:700}
+.keybox b{font-family:var(--font-d);font-weight:500;font-size:15px;letter-spacing:.04em;overflow-wrap:anywhere}
+#tab-settings .panel:first-child{margin-top:0}
+.status{display:flex;gap:8px;align-items:center;font-size:14px;font-weight:700;margin:0 0 6px}
+.status i{width:9px;height:9px;border-radius:50%;background:var(--faint);flex:none}
+.status.ok i{background:var(--ok)}.status.bad i{background:var(--danger)}
+.gear{flex:none;background:var(--surface);border:1px solid var(--line);border-radius:12px;width:44px;height:44px;display:grid;place-items:center;padding:0;color:var(--ink)}
+.gear svg{width:22px;height:22px}
 .filterline{display:flex;justify-content:space-between;align-items:center;margin:16px 4px 0;font-size:14px}
 
 .dayh{display:flex;justify-content:space-between;font-size:13px;color:var(--muted);font-weight:700;margin:16px 4px 6px;font-variant-numeric:tabular-nums}
@@ -244,6 +254,7 @@ details.donebox[open] summary h2::after{content:"скрыть"}
 <div class="wrap">
   <header class="top">
     <div><div class="eyebrow" id="today"></div><h1 id="viewTitle">Задачи</h1></div>
+    <button type="button" class="gear" id="gear" aria-label="Настройки" hidden><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="3"/><path d="M19.4 15a1.7 1.7 0 0 0 .3 1.8l.1.1a2 2 0 1 1-2.8 2.8l-.1-.1a1.7 1.7 0 0 0-1.8-.3 1.7 1.7 0 0 0-1 1.5V21a2 2 0 1 1-4 0v-.1a1.7 1.7 0 0 0-1.1-1.5 1.7 1.7 0 0 0-1.8.3l-.1.1a2 2 0 1 1-2.8-2.8l.1-.1a1.7 1.7 0 0 0 .3-1.8 1.7 1.7 0 0 0-1.5-1H3a2 2 0 1 1 0-4h.1a1.7 1.7 0 0 0 1.5-1.1 1.7 1.7 0 0 0-.3-1.8l-.1-.1a2 2 0 1 1 2.8-2.8l.1.1a1.7 1.7 0 0 0 1.8.3H9a1.7 1.7 0 0 0 1-1.5V3a2 2 0 1 1 4 0v.1a1.7 1.7 0 0 0 1 1.5 1.7 1.7 0 0 0 1.8-.3l.1-.1a2 2 0 1 1 2.8 2.8l-.1.1a1.7 1.7 0 0 0-.3 1.8V9a1.7 1.7 0 0 0 1.5 1H21a2 2 0 1 1 0 4h-.1a1.7 1.7 0 0 0-1.5 1z"/></svg></button>
   </header>
 
   <!-- ================= TASKS ================= -->
@@ -332,15 +343,45 @@ details.donebox[open] summary h2::after{content:"скрыть"}
   </section>
 
   <div class="note" id="storeNote" hidden></div>
-  <section class="panel" id="backup" hidden>
+  <section id="tab-settings" hidden>
+    <div class="panel" id="setSync" hidden>
+      <div class="ptitle">Синхронизация</div>
+      <div class="status" id="syncStatus"><i></i><span>Подключаюсь…</span></div>
+      <div class="keybox"><span>Твой ключ</span><b id="keyText"></b></div>
+      <p class="hint">Введи этот ключ на компьютере или другом телефоне, и там появятся те же записи. Никому его не показывай.</p>
+      <div class="two" style="margin-top:10px">
+        <button type="button" class="btn ghost" id="keyCopy">Скопировать</button>
+        <button type="button" class="btn ghost" id="keyEnterBtn">У меня есть ключ</button>
+      </div>
+      <div id="keyEnter" hidden style="display:grid;gap:8px;margin-top:10px">
+        <p class="hint">Записи с этого устройства добавятся к записям по этому ключу.</p>
+        <div class="adder" style="grid-template-columns:minmax(0,1fr) auto"><input class="field" id="keyInput" placeholder="XXXX-XXXX-XXXX-XXXX-XXXX" autocapitalize="characters" autocomplete="off" spellcheck="false" aria-label="Ключ"><button type="button" class="btn" id="keyGo">Войти</button></div>
+      </div>
+    </div>
+    <div class="panel" id="setPush" hidden>
+      <div class="ptitle">Уведомления</div>
+      <div class="status" id="pushStatus"><i></i><span>Выключены</span></div>
+      <p class="hint" id="pushHint">Напоминания о задачах будут приходить на этот телефон, даже когда приложение закрыто.</p>
+      <div class="two" style="margin-top:10px">
+        <button type="button" class="btn" id="pushOn">Включить</button>
+        <button type="button" class="btn ghost" id="pushTest" disabled>Проверить</button>
+      </div>
+    </div>
+    <div class="panel" id="setCal" hidden>
+      <div class="ptitle">Календарь iPhone</div>
+      <p class="hint">Задачи появятся в Календаре и будут обновляться сами. В окне нажми «Подписаться», потом «Готово».</p>
+      <button type="button" class="btn ghost block" id="calSub" style="margin-top:10px">Подписать календарь</button>
+    </div>
+  <div class="panel" id="backup">
     <div class="ptitle">Резервная копия</div>
-    <p class="hint" style="margin-bottom:10px">Записи хранятся на этом телефоне. Раз в неделю сохраняй копию — если телефон потеряется или сбросится, её можно будет восстановить.</p>
+    <p class="hint" id="bkText" style="margin-bottom:10px">Записи хранятся на этом телефоне. Раз в неделю сохраняй копию — если телефон потеряется или сбросится, её можно будет восстановить.</p>
     <div class="two">
       <button type="button" class="btn ghost" id="bkSave">Сохранить копию</button>
       <label class="btn ghost" for="bkFile" style="cursor:pointer">Восстановить</label>
     </div>
     <input type="file" id="bkFile" accept="application/json,.json" hidden>
     <p class="hint" id="bkInfo" style="margin-top:8px"></p>
+  </div>
   </section>
 </div>
 
@@ -393,23 +434,68 @@ const KINDS=['tasks','thoughts','expenses','sections'];
 const state={tasks:[],thoughts:[],expenses:[],sections:[],ready:false};
 let learned={};
 let db=null,base=null,mcp=null,sample=null;
+/* ---- cloud sync (GitHub version with own server) ---- */
+const API=String(window.MOYDEN_API||'').replace(/\/$/,'');
+
+let cloud=false,key='',calToken=lsGet('moyden_cal',''),outbox=lsGet('moyden_outbox',{}),lastSync=lsGet('moyden_since',0);
+let syncing=false,syncAgain=false,syncTimer=null,syncOk=0,syncErr=null;
+const ALPH='ABCDEFGHJKLMNPQRSTUVWXYZ23456789';
+const normKey=k=>String(k||'').toUpperCase().replace(/[^A-Z0-9]/g,'');
+const fmtKey=k=>normKey(k).replace(/(.{4})(?=.)/g,'$1-');
+function genKey(){const a=crypto.getRandomValues(new Uint8Array(20));let s='';for(const x of a)s+=ALPH[x%32];return fmtKey(s)}
+function withTs(kind,row){if(kind==='tasks'&&row&&row.due){const t=new Date(row.due).getTime();if(Number.isFinite(t))row.dueTs=t}return row}
+function queue(kind,id,data,deleted){outbox[kind+'/'+id]={kind,id,data:deleted?null:data,deleted:!!deleted,updated:Date.now()};lsSet('moyden_outbox',outbox);scheduleSync(400)}
+function queueAll(){for(const k of KINDS)for(const r of state[k])queue(k,r.id,strip(withTs(k,r)));if(Object.keys(learned).length)queue('prefs','learned',{map:learned})}
+function scheduleSync(ms){clearTimeout(syncTimer);syncTimer=setTimeout(sync,ms)}
+async function sync(){
+  if(!cloud)return;if(syncing){syncAgain=true;return}syncing=true;
+  const sent=Object.assign({},outbox);
+  try{
+    const r=await fetch(API+'/api/sync',{method:'POST',headers:{'Content-Type':'application/json',Authorization:'Bearer '+normKey(key)},body:JSON.stringify({since:lastSync,changes:Object.values(sent)})});
+    if(!r.ok)throw new Error('ошибка сервера '+r.status);
+    const res=await r.json();
+    for(const k in sent)if(outbox[k]&&outbox[k].updated===sent[k].updated)delete outbox[k];
+    lsSet('moyden_outbox',outbox);
+    let changed=false;
+    for(const d of res.docs||[]){
+      if(outbox[d.kind+'/'+d.id])continue;
+      if(d.kind==='prefs'){if(d.id==='learned'&&d.data&&d.data.map&&JSON.stringify(d.data.map)!==JSON.stringify(learned)){learned=Object.assign({},d.data.map);changed=true}continue}
+      if(!state[d.kind])continue;
+      const i=state[d.kind].findIndex(x=>x.id===d.id);
+      if(d.deleted){if(i>=0){state[d.kind].splice(i,1);changed=true}}
+      else{const row=Object.assign({id:d.id},d.data);if(i<0||JSON.stringify(state[d.kind][i])!==JSON.stringify(row)){if(i>=0)state[d.kind][i]=row;else state[d.kind].push(row);changed=true}}
+    }
+    lastSync=res.now;lsSet('moyden_since',lastSync);if(res.cal){calToken=res.cal;lsSet('moyden_cal',calToken)}
+    if(changed){saveLocal();renderAll()}
+    syncOk=Date.now();syncErr=null;
+  }catch(e){syncErr=(e&&e.message)||'нет связи'}
+  syncing=false;renderSyncStatus();
+  if(syncAgain||(Object.keys(outbox).length&&!syncErr)){syncAgain=false;scheduleSync(1500)}
+}
+function setStatus(el,cls,text){el.className='status'+(cls?' '+cls:'');el.querySelector('span').textContent=text}
+function renderSyncStatus(){
+  if(!cloud)return;
+  const pending=Object.keys(outbox).length;
+  if(syncErr)setStatus($('#syncStatus'),'bad','Нет связи с сервером'+(pending?' · не отправлено: '+pending:'')+'. Всё сохранится, когда связь появится.');
+  else if(syncOk)setStatus($('#syncStatus'),'ok','Включена · обновлено в '+hm(new Date(syncOk)));
+}
 const LSKEY='moyden_data_v1';
 function saveLocal(){lsSet(LSKEY,{tasks:state.tasks,thoughts:state.thoughts,expenses:state.expenses,sections:state.sections,learned})}
 async function put(kind,id,obj){
   if(db){try{await base.collection(kind).doc(id).set(obj)}catch(e){toast('Не сохранилось: '+(e&&e.message||'ошибка'));throw e}}
-  else{const i=state[kind].findIndex(x=>x.id===id);const row=Object.assign({id},obj);if(i>=0)state[kind][i]=row;else state[kind].push(row);saveLocal();render(kind)}
+  else{const i=state[kind].findIndex(x=>x.id===id);const row=withTs(kind,Object.assign({id},obj));if(i>=0)state[kind][i]=row;else state[kind].push(row);saveLocal();render(kind);if(cloud)queue(kind,id,strip(row))}
 }
 async function patch(kind,id,p){
   if(db){try{await base.collection(kind).doc(id).update(p)}catch(e){toast('Не сохранилось: '+(e&&e.message||'ошибка'))}}
-  else{const r=state[kind].find(x=>x.id===id);if(r){Object.assign(r,p);saveLocal();render(kind)}}
+  else{const r=state[kind].find(x=>x.id===id);if(r){withTs(kind,Object.assign(r,p));saveLocal();render(kind);if(cloud)queue(kind,id,strip(r))}}
 }
 async function del(kind,id){
   if(db){try{await base.collection(kind).doc(id).delete()}catch(e){toast('Не удалилось: '+(e&&e.message||'ошибка'))}}
-  else{state[kind]=state[kind].filter(x=>x.id!==id);saveLocal();render(kind)}
+  else{state[kind]=state[kind].filter(x=>x.id!==id);saveLocal();render(kind);if(cloud)queue(kind,id,null,true)}
 }
 async function saveLearned(){
   if(db){try{await base.collection('prefs').doc('learned').set({map:learned})}catch(e){}}
-  else saveLocal();
+  else{saveLocal();if(cloud)queue('prefs','learned',{map:learned})}
 }
 const strip=o=>{const c=Object.assign({},o);delete c.id;return c};
 
@@ -426,7 +512,7 @@ function removeWithUndo(kind,row,label){
 }
 
 /* ================= tabs ================= */
-const TITLES={tasks:'Задачи',thoughts:'Мысли',money:'Бюджет'};
+const TITLES={tasks:'Задачи',thoughts:'Мысли',money:'Бюджет',settings:'Настройки'};
 function showTab(t){
   if(!TITLES[t])t='tasks';
   for(const k in TITLES)$('#tab-'+k).hidden=k!==t;
@@ -486,7 +572,7 @@ function openIcs(t){
   const url=URL.createObjectURL(new Blob([ics],{type:'text/calendar'}));
   const a=h('a',{href:url,download:'napominanie.ics'});document.body.append(a);a.click();a.remove();setTimeout(()=>URL.revokeObjectURL(url),5000);
 }
-const canRemind=()=>!!mcp||!inClaude;
+const canRemind=()=>!!mcp||(!inClaude&&!cloud);
 async function remind(t){
   if(!mcp){if(inClaude)return;openIcs(t);await patch('tasks',t.id,{cal:'ics'});toast('Нажми «Добавить» в окне календаря');return}
   const id=await addToCalendar(t);
@@ -512,7 +598,8 @@ $('#taskForm').addEventListener('submit',async ev=>{
   try{await put('tasks',id,t)}catch(e){$('#taskText').value=text;return}
   calSel=date;
   const future=new Date(t.due)>new Date();
-  if(!mcp&&!inClaude&&remSel.length&&future){remind(Object.assign({id},t))}
+  if(cloud&&remSel.length&&future){if(lsGet('moyden_sub','')==='')toast('Задача добавлена. Чтобы пришло напоминание, включи уведомления в настройках');else toast('Задача добавлена, напомню')}
+  else if(!mcp&&!inClaude&&remSel.length&&future){remind(Object.assign({id},t))}
   else if(mcp&&remSel.length&&future){toast('Задача добавлена, ставлю напоминание…');remind(Object.assign({id},t))}
   else toast('Задача добавлена');
 });
@@ -521,7 +608,7 @@ function taskRow(t,now,showDate){
   const today=ymd(now),dd=ymd(d);
   const when=dd===today?'Сегодня':dd===ymd(addDays(now,1))?'Завтра':fDay.format(d);
   const meta=h('div',{class:'meta'},h('span',{class:late?'late':null},(showDate?when+', ':'')+hm(d)));
-  if(t.cal){const p=h('span',{class:'pill on'},icon('bell'),(t.remind&&t.remind.length?t.remind:[0]).map(remText).join(', '));meta.append(p)}
+  if(t.cal||(cloud&&t.remind&&t.remind.length&&!t.done)){const p=h('span',{class:'pill on'},icon('bell'),(t.remind&&t.remind.length?t.remind:[0]).map(remText).join(', '));meta.append(p)}
   else if(!t.done&&!late&&canRemind())meta.append(h('button',{type:'button',class:'btn ghost small',onclick:()=>remind(t)},icon('bell'),'Напомнить'));
   const tick=h('button',{type:'button',class:'tick','aria-label':t.done?'Вернуть в работу':'Отметить выполненной',onclick:()=>patch('tasks',t.id,{done:!t.done,doneAt:t.done?null:Date.now()})},icon('tick'));
   const x=h('button',{type:'button',class:'x','aria-label':'Удалить задачу',onclick:()=>{
@@ -857,7 +944,7 @@ setInterval(()=>{if(!$('#tab-tasks').hidden)renderTasks()},60000);
 
 async function boot(){
   const use=window.claude&&window.claude.use?n=>window.claude.use(n).catch(()=>null):()=>Promise.resolve(null);
-  use('mcp').then(m=>{mcp=m;if(!m&&inClaude){$('#remBox').hidden=true;showCalNote('Напоминания на телефон работают, когда приложение открыто в Claude.',false)}if(!m&&!inClaude)$('#remBox').querySelector('.lbl').textContent='Напомнить через Календарь iPhone';renderTasks()});
+  use('mcp').then(m=>{mcp=m;if(!m&&inClaude){$('#remBox').hidden=true;showCalNote('Напоминания на телефон работают, когда приложение открыто в Claude.',false)}if(!m&&!inClaude&&!API)$('#remBox').querySelector('.lbl').textContent='Напомнить через Календарь iPhone';renderTasks()});
   use('sample').then(s=>{sample=s;renderParsed()});
   const [d,u]=await Promise.all([use('db'),use('user')]);
   let id=null;if(d&&u){try{id=await u.id()}catch(e){}}
@@ -872,7 +959,19 @@ async function boot(){
   }else{
     const s=lsGet(LSKEY,{});for(const k of KINDS)state[k]=s[k]||[];learned=s.learned||{};state.ready=true;renderAll();
     if(inClaude){const n=$('#storeNote');n.textContent='Записи сейчас хранятся только на этом устройстве. Открой приложение в Claude, чтобы они сохранялись в аккаунте.';n.hidden=false}
-    else{$('#backup').hidden=false;try{navigator.storage&&navigator.storage.persist&&navigator.storage.persist()}catch(e){}}
+    else{
+      $('#gear').hidden=false;try{navigator.storage&&navigator.storage.persist&&navigator.storage.persist()}catch(e){}
+      if(API){
+        cloud=true;key=lsGet('moyden_key','');if(!key){key=genKey();lsSet('moyden_key',key)}
+        const upFlag='moyden_up_'+normKey(key).slice(0,6);if(!lsGet(upFlag,false)){queueAll();lsSet(upFlag,true)}
+        for(const id of ['#setSync','#setPush','#setCal'])$(id).hidden=false;$('#bkText').textContent='Записи хранятся на сервере и на этом устройстве. Копия в файле — на всякий случай.';
+        $('#keyText').textContent=fmtKey(key);$('#remBox').querySelector('.lbl').textContent='Напомнить уведомлением';
+        renderPushStatus();renderTasks();sync();
+        setInterval(()=>{if(document.visibilityState==='visible')sync()},30000);
+        document.addEventListener('visibilitychange',()=>{if(document.visibilityState==='visible')sync()});
+        addEventListener('online',()=>sync());
+      }
+    }
   }
 }
 $('#bkSave').addEventListener('click',()=>{
@@ -884,11 +983,60 @@ $('#bkSave').addEventListener('click',()=>{
 $('#bkFile').addEventListener('change',e=>{
   const f=e.target.files&&e.target.files[0];if(!f)return;
   const r=new FileReader();r.onload=()=>{try{const d=JSON.parse(r.result);if(d.app!=='moy-den')throw 0;
-    for(const k of KINDS)state[k]=Array.isArray(d[k])?d[k]:[];learned=d.learned||{};saveLocal();renderAll();toast('Записи восстановлены')}
+    for(const k of KINDS)state[k]=Array.isArray(d[k])?d[k]:[];learned=d.learned||{};saveLocal();renderAll();if(cloud)queueAll();toast('Записи восстановлены')}
     catch(err){toast('Это не файл копии «Моего дня»')}e.target.value=''};r.readAsText(f);
 });
 function bkInfo(){const t=lsGet('moyden_bk',0);$('#bkInfo').textContent=t?'Последняя копия: '+fShort.format(new Date(t)):'Копию ещё не сохраняли.'}
 bkInfo();
+$('#gear').addEventListener('click',()=>showTab($('#tab-settings').hidden?'settings':lsGet('moyden_prevtab','tasks')));
+document.querySelectorAll('.tab').forEach(b=>b.addEventListener('click',()=>lsSet('moyden_prevtab',b.dataset.tab)));
+$('#keyCopy').addEventListener('click',()=>{const k=fmtKey(key);navigator.clipboard&&navigator.clipboard.writeText(k).then(()=>toast('Ключ скопирован'),()=>toast('Выдели ключ и скопируй вручную'))});
+$('#keyEnterBtn').addEventListener('click',()=>{$('#keyEnter').hidden=!$('#keyEnter').hidden;if(!$('#keyEnter').hidden)$('#keyInput').focus()});
+$('#keyGo').addEventListener('click',async()=>{
+  const k=normKey($('#keyInput').value);
+  if(k.length<16){toast('Ключ слишком короткий — проверь, что ввёл его целиком');return}
+  if(k===normKey(key)){toast('Это и есть твой текущий ключ');return}
+  key=fmtKey(k);lsSet('moyden_key',key);lastSync=0;lsSet('moyden_since',0);queueAll();lsSet('moyden_up_'+k.slice(0,6),true);
+  $('#keyText').textContent=key;$('#keyInput').value='';$('#keyEnter').hidden=true;
+  if(lsGet('moyden_sub',''))await subscribePush(true);
+  await sync();toast(syncErr?'Ключ сохранён, синхронизирую, когда будет связь':'Готово, записи загружены');
+});
+const b64uBytes=s=>{s=s.replace(/-/g,'+').replace(/_/g,'/');const b=atob(s+'='.repeat((4-s.length%4)%4));return Uint8Array.from(b,c=>c.charCodeAt(0))};
+const standalone=()=>navigator.standalone===true||(window.matchMedia&&matchMedia('(display-mode: standalone)').matches);
+function renderPushStatus(){
+  const on=lsGet('moyden_sub','')!==''&&typeof Notification!=='undefined'&&Notification.permission==='granted';
+  setStatus($('#pushStatus'),on?'ok':'',on?'Включены на этом устройстве':'Выключены');
+  $('#pushOn').textContent=on?'Включить заново':'Включить';$('#pushTest').disabled=!on;
+}
+async function subscribePush(silent){
+  const hint=$('#pushHint');
+  if(!('serviceWorker' in navigator)||!('PushManager' in window)||typeof Notification==='undefined'){
+    hint.textContent=isIOS&&!standalone()?'Сначала добавь приложение на экран «Домой»: в Safari нажми «Поделиться» → «На экран „Домой“». Потом открой его с иконки и нажми «Включить».':'Этот браузер не умеет показывать уведомления.';hint.className='hint';return false}
+  try{
+    const perm=await Notification.requestPermission();
+    if(perm!=='granted'){hint.textContent='Уведомления запрещены. Разреши их: Настройки iPhone → Уведомления → Мой день.';return false}
+    const reg=await navigator.serviceWorker.ready;
+    let sub=await reg.pushManager.getSubscription();
+    if(!sub){const hr=await fetch(API+'/api/health');const vapid=(await hr.json()).vapid;if(!vapid)throw new Error('сервер ещё не настроен');sub=await reg.pushManager.subscribe({userVisibleOnly:true,applicationServerKey:b64uBytes(vapid)})}
+    const r=await fetch(API+'/api/push',{method:'POST',headers:{'Content-Type':'application/json',Authorization:'Bearer '+normKey(key)},body:JSON.stringify({endpoint:sub.endpoint})});
+    if(!r.ok)throw new Error('ошибка сервера '+r.status);
+    const {id}=await r.json();lsSet('moyden_sub',id);
+    const c=await caches.open('moyden-cfg');await c.put('cfg',new Response(JSON.stringify({api:API,sub:id}),{headers:{'Content-Type':'application/json'}}));
+    hint.textContent='Напоминания о задачах будут приходить на этот телефон, даже когда приложение закрыто.';
+    if(!silent)toast('Уведомления включены');return true;
+  }catch(e){hint.textContent='Не получилось включить: '+((e&&e.message)||'ошибка')+'. Проверь интернет и попробуй ещё раз.';return false}
+  finally{renderPushStatus()}
+}
+$('#pushOn').addEventListener('click',()=>subscribePush(false));
+$('#pushTest').addEventListener('click',async()=>{
+  try{const r=await fetch(API+'/api/push/test',{method:'POST',headers:{'Content-Type':'application/json',Authorization:'Bearer '+normKey(key)},body:JSON.stringify({id:lsGet('moyden_sub','')})});
+    if(r.status===404){lsSet('moyden_sub','');renderPushStatus();toast('Подписка устарела, нажми «Включить» ещё раз');return}
+    toast(r.ok?'Отправил проверочное уведомление':'Сервер не смог отправить уведомление')}catch(e){toast('Нет связи с сервером')}
+});
+$('#calSub').addEventListener('click',()=>{
+  if(!calToken){toast('Сначала дождись синхронизации');sync();return}
+  location.href='webcal://'+API.replace(/^https?:\/\//,'')+'/cal/'+calToken+'.ics';
+});
 boot();
 })();
 </script>
