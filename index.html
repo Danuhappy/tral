@@ -3,8 +3,7 @@
 <head>
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover">
-<meta name="theme-color" content="#F5F5F2" media="(prefers-color-scheme: light)">
-<meta name="theme-color" content="#111111" media="(prefers-color-scheme: dark)">
+<meta name="theme-color" content="#0B0F0D">
 <meta name="description" content="Расчёт ставки рейса, нагрузки на оси и проверка под спецразрешение для тралов">
 <link rel="manifest" href="manifest.webmanifest">
 <link rel="icon" type="image/png" href="icons/favicon-32.png">
@@ -12,8 +11,8 @@
 <meta name="apple-mobile-web-app-capable" content="yes">
 <meta name="mobile-web-app-capable" content="yes">
 <meta name="apple-mobile-web-app-title" content="Трал-Расчёт">
-<meta name="apple-mobile-web-app-status-bar-style" content="default">
-<style>:root{padding-top:env(safe-area-inset-top,0px);padding-bottom:env(safe-area-inset-bottom,0px)}body{margin:0}img{max-width:100%}[hidden]{display:none!important}</style>
+<meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+<style>html{background:#0B0F0D}body{margin:0}img{max-width:100%}[hidden]{display:none!important}</style>
 </head>
 <body>
 <title>Трал-Расчёт</title>
@@ -21,31 +20,23 @@
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
 <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Onest:wght@400;500;600;700&display=swap">
 <style>
-/* Layout: minimal, one column (max 640px). Home is a plain list of sections; each section is a page with a back button. Monochrome UI, colour only for verdicts and the route. */
+/* Тёмная тема, зелёный акцент. Телефон в первую очередь: нижняя панель вкладок, вердикт всегда сверху. */
 :root{
-  --bg:#F5F5F2; --surface:#FFFFFF; --surface-2:#F0F0EC; --ink:#141414; --muted:#6E6E69; --line:#E3E3DE;
-  --head-bg:#F5F5F2; --head-ink:#141414; --head-muted:#6E6E69;
-  --amber:#141414; --amber-ink:#FFFFFF; --blue:#2350E6; --blue-soft:#E7ECFD;
-  --good:#16834E; --good-soft:#E3F3EA; --warn:#A86A00; --warn-soft:#FBF0DA; --bad:#C7362C; --bad-soft:#FBE5E3;
-  --empty-leg:#9A9A94;
-  --map-water:#E9EDF0; --map-land:#FAFAF8; --map-land2:#EFEFEB; --map-road:#CFCFC8;
+  --bg:#0B0F0D; --surface:#141A17; --surface-2:#1C2420; --surface-3:#26302B; --ink:#ECF2EE; --muted:#8FA096; --line:#24302A;
+  --head-bg:#0B0F0D; --head-ink:#ECF2EE; --head-muted:#8FA096;
+  --accent:#3DDC84; --accent-ink:#04120A; --accent-soft:#123222; --accent-line:#1E5A3A;
+  --amber:#3DDC84; --amber-ink:#04120A; --blue:#3DDC84; --blue-soft:#123222;
+  --good:#3DDC84; --good-soft:#112B1D; --warn:#F5B942; --warn-soft:#2F2511; --bad:#FF6B5E; --bad-soft:#361915;
+  --empty-leg:#71807A;
+  --map-water:#080B0A; --map-land:#18201C; --map-land2:#121815; --map-road:#33403A;
   --f-display:"Onest",system-ui,-apple-system,"Segoe UI",Roboto,sans-serif;
   --f-body:"Onest",system-ui,-apple-system,"Segoe UI",Roboto,sans-serif;
   --f-mono:"Onest",system-ui,-apple-system,sans-serif;
-  --r:16px;
+  --r:18px;
+  --ease:cubic-bezier(.22,1,.36,1);
+  --tabbar-h:64px;
+  color-scheme:dark;
 }
-@media (prefers-color-scheme: dark){:root:not([data-theme="light"]){
-  --bg:#111111; --surface:#1A1A1A; --surface-2:#242424; --ink:#F2F2EF; --muted:#9C9C96; --line:#2E2E2C;
-  --head-bg:#111111; --head-ink:#F2F2EF; --head-muted:#9C9C96;
-  --amber:#F2F2EF; --amber-ink:#111111; --blue:#7C9BFF; --blue-soft:#1E2640;
-  --good:#4CC38A; --good-soft:#15291F; --warn:#E9B44C; --warn-soft:#33270F; --bad:#EF6A5E; --bad-soft:#3A1A17;
-  --empty-leg:#77776F; --map-water:#0D0F11; --map-land:#1B1B1A; --map-land2:#151514; --map-road:#3A3A36; color-scheme:dark}}
-:root[data-theme="dark"]{
-  --bg:#111111; --surface:#1A1A1A; --surface-2:#242424; --ink:#F2F2EF; --muted:#9C9C96; --line:#2E2E2C;
-  --head-bg:#111111; --head-ink:#F2F2EF; --head-muted:#9C9C96;
-  --amber:#F2F2EF; --amber-ink:#111111; --blue:#7C9BFF; --blue-soft:#1E2640;
-  --good:#4CC38A; --good-soft:#15291F; --warn:#E9B44C; --warn-soft:#33270F; --bad:#EF6A5E; --bad-soft:#3A1A17;
-  --empty-leg:#77776F; --map-water:#0D0F11; --map-land:#1B1B1A; --map-land2:#151514; --map-road:#3A3A36; color-scheme:dark}
 
 *{box-sizing:border-box}
 body{background:var(--bg);color:var(--ink);font-family:var(--f-body);font-size:15px;line-height:1.45;margin:0}
@@ -255,247 +246,335 @@ details.more .fields{margin-top:10px}
 .util .bar{width:70px;height:8px;border-radius:4px;background:var(--line);overflow:hidden;flex:none}
 .util .bar span{display:block;height:100%}
 
-/* ===== minimal app ===== */
-body{font-family:var(--f-body);font-size:16px;line-height:1.45;background:var(--bg);-webkit-text-size-adjust:100%}
+/* ===== app shell (dark, green) ===== */
+html{background:var(--bg);-webkit-tap-highlight-color:transparent}
+body{font-family:var(--f-body);font-size:16px;line-height:1.45;background:var(--bg);color:var(--ink);-webkit-text-size-adjust:100%;
+  padding-bottom:calc(var(--tabbar-h) + env(safe-area-inset-bottom,0px) + 8px);caret-color:var(--accent)}
+::selection{background:var(--accent-line);color:var(--ink)}
+*{scrollbar-width:thin;scrollbar-color:var(--surface-3) transparent}
+::-webkit-scrollbar{width:8px;height:8px} ::-webkit-scrollbar-thumb{background:var(--surface-3);border-radius:8px} ::-webkit-scrollbar-track{background:transparent}
+:focus-visible{outline:2px solid var(--accent);outline-offset:2px}
+a{color:var(--accent);text-underline-offset:3px}
 h1,h2,h3{font-family:var(--f-display);font-weight:600;letter-spacing:-.01em}
 h2{font-size:17px}
 .num{font-family:var(--f-body);font-variant-numeric:tabular-nums}
-main{padding-block:8px 64px}
-.wrap{max-width:640px}
-.grid{grid-template-columns:minmax(0,1fr)!important;gap:14px}
-.stack{gap:14px}
-.card,.verdict{border-radius:var(--r);background:var(--surface);border:1px solid var(--line);padding:18px}
+main{padding-block:4px 24px}
+.wrap{max-width:600px}
+.grid{grid-template-columns:minmax(0,1fr)!important;gap:12px}
+.stack{gap:12px}
+
+/* top: large title like iOS */
+.appbar{max-width:600px;margin:0 auto;padding:calc(14px + env(safe-area-inset-top,0px)) 16px 10px;display:flex;align-items:center;justify-content:space-between;gap:12px;min-height:64px}
+.appbar h1{font-size:28px;line-height:1.1;font-weight:700;letter-spacing:-.025em;margin:0}
+.appbar .act{display:flex;gap:8px}
+.icon-btn{min-height:44px;min-width:44px;border:0;border-radius:999px;background:var(--surface-2);color:var(--ink);display:inline-flex;align-items:center;justify-content:center;gap:6px;padding:0 14px 0 12px;font-size:15px;font-weight:600;cursor:pointer;transition:background .15s}
+.icon-btn:hover{background:var(--surface-3)}
+.icon-btn:active{transform:scale(.97)}
+.icon-btn svg{width:20px;height:20px;flex:none}
+.icon-btn.back-btn{padding:0 14px 0 6px}
+
+/* bottom tab bar */
+.tabbar{position:fixed;left:0;right:0;bottom:0;z-index:30;background:rgba(11,15,13,.86);-webkit-backdrop-filter:saturate(1.4) blur(18px);backdrop-filter:saturate(1.4) blur(18px);
+  border-top:1px solid var(--line);padding-bottom:env(safe-area-inset-bottom,0px)}
+.tabbar .in{max-width:600px;margin:0 auto;display:grid;grid-template-columns:repeat(5,minmax(0,1fr))}
+.tabbar button{position:relative;min-height:var(--tabbar-h);border:0;background:transparent;color:var(--muted);display:flex;flex-direction:column;align-items:center;justify-content:center;gap:4px;font-size:11.5px;font-weight:600;letter-spacing:.01em;cursor:pointer;padding:6px 2px 4px;transition:color .15s}
+.tabbar button svg{width:26px;height:26px;transition:transform .25s var(--ease)}
+.tabbar button.on{color:var(--accent)}
+.tabbar button.on svg{transform:translateY(-1px)}
+.tabbar button:active svg{transform:scale(.9)}
+.tb-badge{position:absolute;top:7px;left:calc(50% + 7px);min-width:18px;height:18px;padding:0 5px;border-radius:9px;background:var(--accent);color:var(--accent-ink);font-size:11px;font-weight:700;line-height:18px;text-align:center;font-variant-numeric:tabular-nums}
+.tb-badge:empty{display:none}
+.tabbar button[data-v]::after{content:"";position:absolute;top:9px;left:calc(50% + 9px);width:8px;height:8px;border-radius:50%;border:2px solid var(--bg);opacity:0;transition:opacity .2s}
+.tabbar button[data-v="good"]::after{background:var(--good);opacity:1}
+.tabbar button[data-v="ok"]::after{background:var(--warn);opacity:1}
+.tabbar button[data-v="bad"]::after{background:var(--bad);opacity:1}
+
+/* screen change */
+[data-panel]:not([hidden]){animation:screenIn .22s var(--ease) both}
+@keyframes screenIn{from{opacity:.001;transform:translateY(6px)}to{opacity:1;transform:none}}
+
+/* cards & form */
+.card{border-radius:var(--r);background:var(--surface);border:1px solid var(--line);padding:18px}
 .card-h{margin-bottom:14px}
 .sub,.hint{color:var(--muted)}
 label.f{font-size:14px;color:var(--muted);gap:6px}
-.inp,select.inp{min-height:52px;font-size:17px;border-radius:12px;background:var(--surface-2);border:1px solid transparent;padding:12px 14px}
-.inp:focus{border-color:var(--ink);box-shadow:none;background:var(--surface)}
+.inp,select.inp{min-height:52px;font-size:17px;border-radius:12px;background:var(--surface-2);border:1px solid transparent;padding:12px 14px;color:var(--ink);transition:border-color .15s,background .15s}
+.inp::placeholder{color:#84938B}
+.inp:focus{border-color:var(--accent);box-shadow:0 0 0 3px var(--accent-soft);background:var(--surface-2)}
+select.inp{appearance:none;-webkit-appearance:none;background-image:linear-gradient(45deg,transparent 50%,var(--muted) 50%),linear-gradient(135deg,var(--muted) 50%,transparent 50%);background-position:calc(100% - 20px) 50%,calc(100% - 15px) 50%;background-size:5px 5px;background-repeat:no-repeat;padding-right:36px}
 .unit .inp{padding-right:58px}
 .seg{border-radius:12px;background:var(--surface-2);border:0;padding:4px;gap:4px}
-.seg button{min-height:44px;border-radius:9px;padding:0 14px;font-size:15px}
-.seg button[aria-pressed="true"]{background:var(--surface);color:var(--ink);box-shadow:0 1px 3px rgba(0,0,0,.12)}
-.btn{min-height:48px;border-radius:12px;padding:12px 18px;font-size:16px;font-weight:600;background:var(--surface-2);border:0;color:var(--ink)}
-.btn.small{min-height:40px;padding:8px 14px;font-size:14px}
-.btn.primary,.btn.blue{background:var(--ink);color:var(--bg)}
+.seg button{min-height:44px;border-radius:9px;padding:0 14px;font-size:15px;color:var(--muted);transition:background .15s,color .15s}
+.seg button[aria-pressed="true"]{background:var(--surface-3);color:var(--ink);box-shadow:0 1px 2px rgba(0,0,0,.4)}
+.btn{min-height:50px;border-radius:14px;padding:12px 18px;font-size:16px;font-weight:600;background:var(--surface-2);border:0;color:var(--ink);transition:background .15s,transform .1s}
+.btn:hover{background:var(--surface-3);border-color:transparent}
+.btn:active{transform:scale(.98)}
+.btn.small{min-height:40px;padding:8px 14px;font-size:14px;border-radius:12px}
+.btn.primary{background:var(--accent);color:var(--accent-ink)}
+.btn.primary:hover{background:#5BE69A}
+.btn.blue{background:var(--accent-soft);color:var(--accent)}
+.btn.blue:hover{background:#17402B}
 .btn.ghost{background:transparent;border:1px solid var(--line)}
 .btn.danger{color:var(--bad)}
 .badge{display:none}
 .switch{font-size:17px}
-.switch input{width:50px;height:30px}
-.switch input::after{width:24px;height:24px}
-.switch input:checked::after{left:23px}
-.switch input:checked{background:var(--ink)}
-.kpis{gap:8px}
-.kpi{background:var(--surface-2);border-radius:12px;padding:12px 14px}
-.kpi .l{font-size:13px}
-.kpi .v{font-family:var(--f-body);font-size:19px;font-weight:600}
-.tips li{background:var(--surface-2);border-radius:12px;border-left-width:3px;font-size:15px}
-.verdict .state{font-size:13px}
-.bigrate .n{font-family:var(--f-display);font-weight:600;font-size:clamp(52px,15vw,72px);letter-spacing:-.03em}
-.tbl-wrap{border-radius:var(--r)}
-.combo-list{border-radius:12px}
+.switch input{width:52px;height:32px;background:var(--surface-3)}
+.switch input::after{width:26px;height:26px;background:var(--ink)}
+.switch input:checked{background:var(--accent)}
+.switch input:checked::after{left:23px;background:var(--accent-ink)}
+.check .ic{color:var(--accent-ink)}
+.toast{background:var(--ink);color:var(--bg);bottom:calc(var(--tabbar-h) + 14px + env(safe-area-inset-bottom,0px));border-radius:14px;box-shadow:0 10px 30px rgba(0,0,0,.5)}
+.combo-list{background:var(--surface-2);border-color:var(--surface-3);border-radius:14px;box-shadow:0 18px 40px rgba(0,0,0,.55)}
 .combo-list li{padding:12px;font-size:16px}
+.combo-list li.act,.combo-list li:hover{background:var(--accent-soft)}
+.tbl-wrap{border-radius:var(--r);background:var(--surface)}
+th{background:var(--surface-2)}
 .cargo{background:var(--surface-2);border:0}
-.map{border-radius:12px;border:0}
+.map{border-radius:14px;border:0}
+.map-ui button{background:var(--surface-2);border-color:var(--surface-3);box-shadow:0 4px 12px rgba(0,0,0,.4)}
+.map-coord{background:var(--surface-2);border-color:var(--surface-3)}
+.result{background:var(--surface-2);border-radius:12px}
+.advice{background:var(--surface-2);border-color:var(--line);border-radius:14px}
+label.f:has(.combo){grid-column:1/-1}
+label.f .opt{font-weight:400;color:var(--muted);font-size:13px}
+.fields{align-items:end}
+
+/* ===== verdict: always on top while you type ===== */
+.verdict{border-radius:20px;background:var(--surface);border:1px solid var(--line);padding:16px;transition:border-color .3s,background .3s}
+#verdict{position:sticky;top:calc(8px + env(safe-area-inset-top,0px));z-index:12;padding:14px 16px 10px;box-shadow:0 10px 28px rgba(0,0,0,.45)}
+.verdict.v-good{border-color:#1F5B3B;background:linear-gradient(180deg,#132A1E,var(--surface) 70%)}
+.verdict.v-ok{border-color:#5A4518;background:linear-gradient(180deg,#2A2213,var(--surface) 70%)}
+.verdict.v-bad{border-color:#5E2620;background:linear-gradient(180deg,#2D1715,var(--surface) 70%)}
+.v-top{display:flex;align-items:center;justify-content:space-between;gap:12px}
+.verdict .state{font-size:14px;font-weight:700;letter-spacing:.01em;text-transform:none;padding:7px 12px 7px 10px;border-radius:999px;display:inline-flex;align-items:center;gap:8px;white-space:nowrap}
+.verdict .state::before{content:"";width:8px;height:8px;border-radius:50%;background:currentColor}
+.v-none .state{background:var(--surface-2);color:var(--muted)}
+.verdict.bump .state{animation:bump .4s var(--ease)}
+@keyframes bump{0%{transform:scale(1)}40%{transform:scale(1.08)}100%{transform:scale(1)}}
+.bigrate{margin:0;gap:6px;flex-wrap:nowrap;align-items:baseline}
+.bigrate .n{font-family:var(--f-display);font-weight:700;font-size:44px;line-height:1;letter-spacing:-.035em;font-variant-numeric:tabular-nums;transition:color .3s}
+.v-none .bigrate .n{color:var(--muted)}
+.bigrate .u{font-size:14px;color:var(--muted);font-weight:600}
+.gauge{margin-top:10px}
+.meter{position:relative;height:30px}
+.meter .trk{position:absolute;left:0;right:0;top:6px;height:6px;display:flex;gap:3px}
+.meter .trk i{display:block;height:100%;border-radius:3px;opacity:.35;transition:opacity .3s,width .3s var(--ease)}
+.meter .z-bad{background:var(--bad)} .meter .z-ok{background:var(--warn)} .meter .z-good{background:var(--good)}
+.v-bad .meter .z-bad,.v-ok .meter .z-ok,.v-good .meter .z-good{opacity:1}
+.meter .tk-min{transform:translateX(calc(-100% - 4px))} .meter .tk-t{transform:translateX(4px)}
+.meter .needle{position:absolute;top:0;width:6px;height:18px;margin-left:-3px;border-radius:3px;background:var(--ink);box-shadow:0 0 0 3px var(--surface),0 2px 6px rgba(0,0,0,.5);transition:left .45s var(--ease)}
+.meter .tk{position:absolute;top:15px;font-size:12px;color:var(--muted);font-variant-numeric:tabular-nums;white-space:nowrap}
+
+/* route points: rail with stops */
+.rps{display:flex;flex-direction:column;gap:12px;padding-left:30px;margin-bottom:14px}
+.rp{position:relative;display:flex;flex-direction:column;gap:6px;font-size:14px;color:var(--muted);font-weight:500;min-width:0}
+.rp::before{content:"";position:absolute;left:-28px;top:45px;width:14px;height:14px;border-radius:50%;box-sizing:border-box;z-index:1;background:var(--surface)}
+.rp:not(:last-child)::after{content:"";position:absolute;left:-22px;top:59px;width:2px;height:calc(100% - 2px)}
+.rp-0::before{border:2px dashed var(--empty-leg)}
+.rp-0::after{background:repeating-linear-gradient(180deg,var(--empty-leg) 0 5px,transparent 5px 10px)}
+.rp-a::before{background:var(--accent);box-shadow:0 0 0 4px var(--accent-soft)}
+.rp-a::after{background:var(--accent)}
+.rp-b::before{border:3px solid var(--accent);background:var(--surface);border-radius:4px}
+.rp .opt{font-weight:400;color:var(--muted);opacity:.85}
+#m_price,#b_price{font-size:22px;font-weight:600;font-variant-numeric:tabular-nums}
+.back-head{display:flex;align-items:center;justify-content:space-between;gap:12px}
+.back-head .sub{font-size:14px}
+#backFields{margin-top:16px}
+
+/* results */
+.kpis{gap:8px;grid-template-columns:repeat(2,minmax(0,1fr))!important}
+.kpi{background:var(--surface);border:1px solid var(--line);border-radius:14px;padding:12px 14px}
+.kpi .l{font-size:13px;color:var(--muted)}
+.kpi .v{font-family:var(--f-body);font-size:20px;font-weight:650;font-variant-numeric:tabular-nums;letter-spacing:-.01em}
+.tips li{background:var(--surface-2);border-radius:12px;border-left:0;font-size:15px;position:relative;padding:11px 12px 11px 30px}
+.tips li::before{content:"";position:absolute;left:12px;top:17px;width:8px;height:8px;border-radius:50%;background:var(--muted)}
+.tips li.t-bad::before{background:var(--bad)} .tips li.t-ok::before{background:var(--warn)} .tips li.t-good::before{background:var(--good)} .tips li.t-info::before{background:var(--muted)}
+.route{height:12px;gap:3px;margin-top:10px}
+.route span{border-radius:6px}
+.paper{font-size:14.5px;color:var(--muted);margin:0}
+.costlist{font-size:15px}
 .leg{grid-template-columns:14px minmax(0,1fr) 120px}
 .leg .inp{min-height:44px}
-.costlist{font-size:15px}
-
-label.f:has(.combo){grid-column:1/-1}
-label.f .opt{font-weight:400;color:var(--muted);opacity:.8;font-size:13px}
-.fields{align-items:end}
-/* top bar + pages */
-.topbar{max-width:640px;margin:0 auto;padding:18px 16px 6px;display:flex;align-items:center;justify-content:space-between}
-.topbar .logo{font-weight:700;font-size:18px;letter-spacing:-.01em}
-.topbar .logo span{color:var(--muted);font-weight:500}
-.page-h{display:flex;flex-direction:column;align-items:flex-start;gap:2px;margin:0 0 16px;padding-top:4px}
-.page-h h2{font-size:22px;font-weight:600}
-.back{min-height:44px;padding:0 14px 0 6px;border:0;background:transparent;color:var(--ink);font-size:16px;font-weight:500;cursor:pointer;display:flex;align-items:center;gap:2px;margin-left:-6px;border-radius:10px}
-.back:hover{background:var(--surface-2)}
-.back b{font-size:26px;font-weight:400;line-height:1;margin-top:-3px}
-
-/* home */
-.h-hello{font-size:15px;color:var(--muted);margin:10px 0 2px}
-.h-title{font-size:30px;line-height:1.15;font-weight:600;margin:0 0 20px;max-width:16ch}
-.h-main{width:100%;min-height:60px;border:0;border-radius:14px;background:var(--ink);color:var(--bg);font-size:18px;font-weight:600;cursor:pointer;display:flex;align-items:center;justify-content:center;gap:10px}
-.h-new{width:100%;margin-top:8px;min-height:52px;border:1px solid var(--line);border-radius:14px;background:transparent;color:var(--ink);font-size:16px;font-weight:500;cursor:pointer}
-.notice{width:100%;margin-top:14px;min-height:52px;border:0;border-radius:12px;background:var(--bad-soft);color:var(--bad);font-size:15px;font-weight:600;cursor:pointer;text-align:left;padding:12px 16px}
-.h-sec{font-size:13px;font-weight:600;color:var(--muted);text-transform:uppercase;letter-spacing:.06em;margin:28px 2px 10px}
-.last{width:100%;text-align:left;border:1px solid var(--line);background:var(--surface);border-radius:var(--r);padding:16px 18px;color:var(--ink);cursor:pointer;display:block}
-.last-top{display:flex;justify-content:space-between;gap:10px;align-items:flex-start}
-.last-top b{font-size:17px;font-weight:600;overflow-wrap:anywhere}
-.last-rate{font-size:34px;font-weight:600;letter-spacing:-.02em;margin-top:6px;font-variant-numeric:tabular-nums}
-.last-rate small{font-size:15px;color:var(--muted);font-weight:500;letter-spacing:0}
-.last-meta{color:var(--muted);font-size:14.5px;margin-top:2px}
-.vpill{font-size:13px;font-weight:600;padding:5px 10px;border-radius:999px;white-space:nowrap}
-.vp-good{background:var(--good-soft);color:var(--good)} .vp-ok{background:var(--warn-soft);color:var(--warn)} .vp-bad{background:var(--bad-soft);color:var(--bad)} .vp-none{background:var(--surface-2);color:var(--muted)}
-.menu{background:var(--surface);border:1px solid var(--line);border-radius:var(--r);overflow:hidden}
-.menu button{width:100%;min-height:64px;border:0;background:transparent;color:var(--ink);display:grid;grid-template-columns:minmax(0,1fr) auto auto;gap:10px;align-items:center;padding:10px 18px;text-align:left;cursor:pointer;border-bottom:1px solid var(--line);font-size:17px}
-.menu button:last-child{border-bottom:0}
-.menu button:hover{background:var(--surface-2)}
-.menu small{display:block;color:var(--muted);font-size:13.5px;margin-top:1px}
-.menu .cnt{font-size:14px;color:var(--muted);font-variant-numeric:tabular-nums}
-.menu .chev{color:var(--muted);font-size:24px;line-height:1}
-.status{margin-top:22px;color:var(--muted);font-size:13px;display:flex;flex-wrap:wrap;gap:4px 14px}
-.status .chip{border:0;padding:0;color:var(--muted)}
-.status .chip b{color:var(--ink);font-weight:600}
+.pill,.vpill{border-radius:999px}
 
 /* folds */
 details.fold{background:var(--surface);border:1px solid var(--line);border-radius:var(--r)}
 details.fold>summary{list-style:none;cursor:pointer;min-height:58px;padding:0 18px;display:flex;align-items:center;justify-content:space-between;gap:10px;font-size:17px;font-weight:600}
 details.fold>summary::-webkit-details-marker{display:none}
-details.fold>summary::after{content:"";width:9px;height:9px;border-right:2px solid var(--muted);border-bottom:2px solid var(--muted);transform:rotate(45deg);margin-right:4px;transition:transform .15s}
+details.fold>summary::after{content:"";width:9px;height:9px;border-right:2px solid var(--muted);border-bottom:2px solid var(--muted);transform:rotate(45deg);margin-right:4px;transition:transform .2s var(--ease)}
 details.fold[open]>summary::after{transform:rotate(-135deg)}
 details.fold>summary small{font-weight:400;color:var(--muted);font-size:14px;margin-left:auto;margin-right:10px}
 details.fold>.fold-body{padding:0 18px 18px}
 details.fold>.fold-body>.card{border:0;padding:0;background:transparent}
 details.fold>.fold-body>.card>.card-h:first-child{display:none}
-.toast{bottom:calc(20px + env(safe-area-inset-bottom,0px))}
+details.more summary::before{border-color:var(--muted)}
 
+/* «Ещё» */
+.menu{background:var(--surface);border:1px solid var(--line);border-radius:var(--r);overflow:hidden}
+.menu button{width:100%;min-height:68px;border:0;background:transparent;color:var(--ink);display:grid;grid-template-columns:40px minmax(0,1fr) auto;gap:14px;align-items:center;padding:10px 16px;text-align:left;cursor:pointer;border-bottom:1px solid var(--line);font-size:17px;font-weight:500}
+.menu button:last-child{border-bottom:0}
+.menu button:hover{background:var(--surface-2)}
+.menu .ico{width:40px;height:40px;border-radius:12px;background:var(--accent-soft);color:var(--accent);display:grid;place-items:center}
+.menu .ico svg{width:22px;height:22px}
+.menu small{display:block;color:var(--muted);font-size:14px;font-weight:400;margin-top:1px}
+.menu .chev{color:var(--muted);font-size:24px;line-height:1}
+.status{margin-top:18px;color:var(--muted);font-size:14px;display:flex;flex-direction:column;gap:6px;padding:0 4px}
+.status .chip{border:0;padding:0;color:var(--muted);font-size:14px}
+.status .chip b{color:var(--ink);font-weight:600}
+
+#sortBy{padding:8px 34px 8px 12px!important;min-height:44px;font-size:14.5px!important;background-position:calc(100% - 18px) 50%,calc(100% - 13px) 50%}
+.cargo .inp,.cargo select.inp{background-color:var(--surface-3)}
+.rp>span:first-child{display:block}
 [hidden]{display:none!important}
-@media (prefers-reduced-motion:reduce){*{transition:none!important}}
+@media (min-width:700px){.appbar h1{font-size:32px}}
+@media (prefers-reduced-motion:reduce){*,*::before,*::after{transition:none!important;animation:none!important}}
+
 </style>
 
-<div class="topbar"><div class="logo">Трал-Расчёт <span>· Кентавр</span></div></div>
+<header class="appbar">
+  <h1 id="appTitle">Расчёт рейса</h1>
+  <div class="act">
+    <button class="icon-btn back-btn" type="button" id="appBack" data-go="more" hidden><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="m15 18-6-6 6-6"/></svg>Ещё</button>
+    <button class="icon-btn" type="button" id="fabNew"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" aria-hidden="true"><path d="M12 5v14M5 12h14"/></svg>Новый</button>
+  </div>
+</header>
 
-<nav class="tabs" aria-label="Разделы" hidden>
-  <div class="wrap" role="tablist">
-    <button class="tab" role="tab" data-tab="home" aria-selected="true">Главная</button>
-    <button class="tab" role="tab" data-tab="trip" aria-selected="false">Рейс</button>
-    <button class="tab" role="tab" data-tab="compare" aria-selected="false">Сравнение</button>
-    <button class="tab" role="tab" data-tab="axles" aria-selected="false">Нагрузка на оси</button>
-    <button class="tab" role="tab" data-tab="permit" aria-selected="false">Разрешение</button>
-    <button class="tab" role="tab" data-tab="tools" aria-selected="false">Инструменты</button>
-    <button class="tab" role="tab" data-tab="settings" aria-selected="false">Расходы и настройки</button>
+<nav class="tabs" aria-label="Разделы" hidden></nav>
+
+<nav class="tabbar" aria-label="Разделы">
+  <div class="in">
+    <button type="button" data-go="trip" data-nav="trip"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><circle cx="6" cy="18" r="2.2"/><circle cx="18" cy="6" r="2.2"/><path d="M8.2 18H16a3 3 0 0 0 0-6H8a3 3 0 0 1 0-6h7.8"/></svg>Расчёт</button>
+    <button type="button" data-go="compare" data-nav="compare"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linejoin="round" aria-hidden="true"><rect x="3.5" y="4" width="17" height="6.5" rx="2"/><rect x="3.5" y="13.5" width="17" height="6.5" rx="2"/></svg>Грузы<span class="tb-badge" id="tileBadge"></span></button>
+    <button type="button" data-go="axles" data-nav="axles"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M2.5 15.5V9h5l2.5 3.5v3"/><path d="M10 13h11.5v2.5H2.5"/><circle cx="6" cy="18.3" r="1.9"/><circle cx="15" cy="18.3" r="1.9"/><circle cx="19.5" cy="18.3" r="1.9"/></svg>Оси</button>
+    <button type="button" data-go="permit" data-nav="permit"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M6.5 3h7.5l4.5 4.5V21h-12z"/><path d="M14 3v4.5h4.5"/><path d="m9.5 14 2 2 3.8-4"/></svg>Разрешение</button>
+    <button type="button" data-go="more" data-nav="more"><svg viewBox="0 0 24 24" fill="currentColor" aria-hidden="true"><circle cx="5" cy="12" r="1.9"/><circle cx="12" cy="12" r="1.9"/><circle cx="19" cy="12" r="1.9"/></svg>Ещё</button>
   </div>
 </nav>
 
 <datalist id="cities"></datalist>
 
 <main class="wrap">
-<!-- ============ HOME ============ -->
-<section id="tab-home" data-panel="home">
-  <p class="h-hello">Привет, Данил</p>
-  <h1 class="h-title">Стоит ли брать груз?</h1>
-  <button class="h-main" type="button" data-go="trip">Рассчитать рейс</button>
-  <button class="h-new" type="button" id="fabNew">Начать с чистого листа</button>
-  <div id="bellDot" hidden><button class="notice" type="button" id="bellBtn">В текущем расчёте есть замечания. Посмотреть</button></div>
-
-  <p class="h-sec">Последний расчёт</p>
-  <button class="last" type="button" id="homeLast" data-go="trip"></button>
-
-  <p class="h-sec">Разделы</p>
+<!-- ============ MORE ============ -->
+<section id="tab-more" data-panel="more" hidden>
   <div class="menu">
-    <button type="button" data-go="permit"><span>Проверка под разрешение<small>Габариты, препятствия, мосты</small></span><span class="cnt"><span id="obstBadge"></span></span><span class="chev" aria-hidden="true">›</span></button>
-    <button type="button" data-go="axles"><span>Нагрузка на оси<small>Где поставить груз на трале</small></span><span class="cnt"></span><span class="chev" aria-hidden="true">›</span></button>
-    <button type="button" data-go="compare"><span>Сохранённые грузы<small>Сравнить и выбрать лучший</small></span><span class="cnt"><span id="tileBadge"></span></span><span class="chev" aria-hidden="true">›</span></button>
-    <button type="button" data-go="tools"><span>Инструменты<small>Габариты, время в пути, НДС</small></span><span class="cnt"></span><span class="chev" aria-hidden="true">›</span></button>
-    <button type="button" data-go="settings"><span>Расходы и настройки<small>Топливо, водитель, пороги ставки</small></span><span class="cnt"></span><span class="chev" aria-hidden="true">›</span></button>
+    <button type="button" data-go="tools"><span class="ico"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linejoin="round" stroke-linecap="round" aria-hidden="true"><path d="M3.5 16.5 16.5 3.5l4 4-13 13z"/><path d="m7.5 12.5 2 2M10.5 9.5l2 2M13.5 6.5l2 2"/></svg></span><span>Инструменты<small>Габариты, время в пути, НДС</small></span><span class="chev" aria-hidden="true">›</span></button>
+    <button type="button" data-go="settings"><span class="ico"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" aria-hidden="true"><path d="M4 6h9M19 6h1M4 12h3M11 12h9M4 18h11M19 18h1"/><circle cx="16" cy="6" r="2.2"/><circle cx="9" cy="12" r="2.2"/><circle cx="17" cy="18" r="2.2"/></svg></span><span>Расходы и настройки<small>Топливо, водитель, пороги ставки, копия данных</small></span><span class="chev" aria-hidden="true">›</span></button>
   </div>
   <div class="status">
     <span class="chip">Минимум <b id="chipMin">105</b> · цель <b id="chipTarget">130</b> ₽/км</span>
     <span class="chip" id="chipDir">Справочник загружается…</span>
     <span class="chip" id="chipStore">Сохранение…</span>
   </div>
+  <div hidden>
+    <button type="button" id="homeLast"></button>
+    <div id="bellDot"><button type="button" id="bellBtn"></button></div>
+    <span id="obstBadge"></span>
+  </div>
 </section>
 
 <!-- ============ TRIP ============ -->
-<section id="tab-trip" data-panel="trip" hidden>
-  <div class="page-h"><button class="back" type="button" data-go="home" aria-label="На главную"><b aria-hidden="true">‹</b>Главная</button><h2>Расчёт рейса</h2></div>
-  <div class="grid">
-    <div class="stack">
-      <div class="card">
-        <div class="card-h"><h2>Груз</h2><span class="badge" id="exampleBadge">пример</span></div>
-        <div class="fields">
-          <label class="f">Где машина сейчас <span class="opt">точка 0, необязательно</span><input class="inp" id="z_start" autocomplete="off" placeholder="Город, где стоит машина"></label>
-          <label class="f">Загрузка<input class="inp" id="m_from" autocomplete="off"></label>
-          <label class="f">Выгрузка<input class="inp" id="m_to" autocomplete="off"></label>
-          <div class="f full" style="display:flex;flex-direction:column;gap:5px;font-size:12.5px;color:var(--muted);font-weight:500">
-            <label for="m_price">Ставка</label>
-            <div class="inp-row">
-              <input class="inp num" id="m_price" inputmode="decimal">
-              <div class="seg" data-seg="m_mode"><button type="button" data-v="total">₽ за рейс</button><button type="button" data-v="perkm">₽/км</button></div>
-            </div>
-          </div>
-          <label class="f">Тип груза<select class="inp" id="m_type"></select></label>
-          <label class="f">Оплата<select class="inp" id="m_vat"><option value="nds">с НДС</option><option value="nonds">без НДС</option><option value="cash">наличные</option></select></label>
-        </div>
+<section id="tab-trip" data-panel="trip">
+  <div class="stack">
+    <div class="verdict v-none" id="verdict" aria-live="polite">
+      <div class="v-top">
+        <span class="state" id="vState">—</span>
+        <div class="bigrate"><span class="n" id="vRate">—</span><span class="u">₽/км</span></div>
       </div>
+      <div class="gauge" id="gauge"></div>
+    </div>
 
-      <div class="card">
-        <div class="card-h">
-          <label class="switch"><input type="checkbox" id="b_on"> Обратка</label>
-          <span class="sub">второй груз от точки выгрузки</span>
+    <div class="card">
+      <div class="card-h"><h2>Груз</h2><span class="badge" id="exampleBadge">пример</span></div>
+      <div class="rps">
+        <label class="rp rp-0"><span>Где машина сейчас <span class="opt">· необязательно</span></span><input class="inp" id="z_start" autocomplete="off" placeholder="Город, откуда поедет пустой"></label>
+        <label class="rp rp-a">Загрузка<input class="inp" id="m_from" autocomplete="off"></label>
+        <label class="rp rp-b">Выгрузка<input class="inp" id="m_to" autocomplete="off"></label>
+      </div>
+      <div class="fields">
+        <div class="f full" style="display:flex;flex-direction:column;gap:6px;font-size:14px;color:var(--muted);font-weight:500">
+          <label for="m_price">Ставка</label>
+          <div class="inp-row">
+            <input class="inp num" id="m_price" inputmode="decimal">
+            <div class="seg" data-seg="m_mode"><button type="button" data-v="total">за рейс</button><button type="button" data-v="perkm">₽/км</button></div>
+          </div>
         </div>
-        <div class="fields" id="backFields">
-          <label class="f">Загрузка<input class="inp" id="b_from" autocomplete="off"></label>
-          <label class="f">Выгрузка<input class="inp" id="b_to" autocomplete="off"></label>
-          <div class="f full" style="display:flex;flex-direction:column;gap:5px;font-size:12.5px;color:var(--muted);font-weight:500">
+        <label class="f">Тип груза<select class="inp" id="m_type"></select></label>
+        <label class="f">Оплата<select class="inp" id="m_vat"><option value="nds">с НДС</option><option value="nonds">без НДС</option><option value="cash">наличные</option></select></label>
+      </div>
+    </div>
+
+    <div class="card">
+      <div class="back-head">
+        <label class="switch"><input type="checkbox" id="b_on"> Обратка</label>
+        <span class="sub">второй груз от выгрузки</span>
+      </div>
+      <div id="backFields">
+        <div class="rps">
+          <label class="rp rp-a">Загрузка<input class="inp" id="b_from" autocomplete="off"></label>
+          <label class="rp rp-b">Выгрузка<input class="inp" id="b_to" autocomplete="off"></label>
+        </div>
+        <div class="fields">
+          <div class="f full" style="display:flex;flex-direction:column;gap:6px;font-size:14px;color:var(--muted);font-weight:500">
             <label for="b_price">Ставка</label>
             <div class="inp-row">
               <input class="inp num" id="b_price" inputmode="decimal">
-              <div class="seg" data-seg="b_mode"><button type="button" data-v="total">₽ за рейс</button><button type="button" data-v="perkm">₽/км</button></div>
+              <div class="seg" data-seg="b_mode"><button type="button" data-v="total">за рейс</button><button type="button" data-v="perkm">₽/км</button></div>
             </div>
           </div>
           <label class="f">Тип груза<select class="inp" id="b_type"></select></label>
           <label class="f">Оплата<select class="inp" id="b_vat"><option value="nds">с НДС</option><option value="nonds">без НДС</option><option value="cash">наличные</option></select></label>
         </div>
       </div>
+    </div>
 
-      <div class="card">
-        <div class="card-h"><h2>Километраж маршрута</h2><span class="sub">можно поправить</span></div>
-        <div class="legs" id="legs"></div>
-        <p class="hint" style="margin:10px 0 0">Км считаются по сети основных трасс, кратчайшей дорогой; от трассы до деревни добавляется подъезд. Если знаешь точное расстояние, впиши его, оно запомнится для этой пары городов.</p>
+    <div class="kpis" id="kpis"></div>
+
+    <div class="card">
+      <div class="card-h"><h2>Подсказки</h2></div>
+      <ul class="tips" id="tips"></ul>
+      <div class="btns" style="margin-top:14px">
+        <button class="btn primary" id="btnSave" type="button">Сохранить груз для сравнения</button>
+        <button class="btn blue" id="btnAsk" type="button" hidden>Спросить совет у Claude</button>
+        <button class="btn ghost" id="btnStop" type="button" hidden>Стоп</button>
+      </div>
+      <div class="advice" id="advice" hidden></div>
+    </div>
+
+    <div class="card">
+      <div class="card-h"><h2>Маршрут</h2></div>
+      <p class="paper" id="vPaper"></p>
+      <div class="route" id="routeBar"></div>
+      <div class="route-legend" id="routeLegend"></div>
+    </div>
+
+    <div class="card map-card">
+      <div class="card-h" style="flex-wrap:wrap">
+        <h2>Карта маршрута</h2>
+        <div class="seg" id="mapZoom"><button type="button" data-v="route" aria-pressed="true">Маршрут</button><button type="button" data-v="all" aria-pressed="false">Вся Россия</button></div>
+      </div>
+      <div class="map" id="map"></div>
+      <div class="route-legend" style="justify-content:space-between">
+        <span><i style="background:var(--blue)"></i>с грузом &nbsp; <i style="background:repeating-linear-gradient(90deg,var(--empty-leg) 0 4px,transparent 4px 6px)"></i>пустой</span>
+        <a id="yaLink" href="#" target="_blank" rel="noopener">Проверить в Яндекс Картах ↗</a>
       </div>
     </div>
 
-    <div class="stack">
-      <div class="verdict v-none" id="verdict">
-        <span class="state" id="vState">—</span>
-        <div class="bigrate"><span class="n" id="vRate">—</span><span class="u">₽/км по маршруту</span></div>
-        <div class="paper" id="vPaper"></div>
-        <div class="gauge" id="gauge"></div>
-        <div class="route" id="routeBar"></div>
-        <div class="route-legend" id="routeLegend"></div>
-      </div>
+    <div class="card">
+      <div class="card-h"><h2>Километраж маршрута</h2><span class="sub">можно поправить</span></div>
+      <div class="legs" id="legs"></div>
+      <p class="hint" style="margin:10px 0 0">Км считаются по сети основных трасс, кратчайшей дорогой; от трассы до деревни добавляется подъезд. Если знаешь точное расстояние, впиши его, оно запомнится для этой пары городов.</p>
+    </div>
 
-      <div class="card map-card">
-        <div class="card-h" style="flex-wrap:wrap">
-          <h2>Карта маршрута</h2>
-          <div class="seg" id="mapZoom"><button type="button" data-v="route" aria-pressed="true">Маршрут</button><button type="button" data-v="all" aria-pressed="false">Вся Россия</button></div>
-        </div>
-        <div class="map" id="map"></div>
-        <div class="route-legend" style="justify-content:space-between">
-          <span><i style="background:var(--blue)"></i>с грузом &nbsp; <i style="background:repeating-linear-gradient(90deg,var(--empty-leg) 0 4px,transparent 4px 6px)"></i>пустой</span>
-          <a id="yaLink" href="#" target="_blank" rel="noopener">Проверить в Яндекс Картах ↗</a>
-        </div>
-      </div>
-
-      <div class="kpis" id="kpis"></div>
-
-      <div class="card">
-        <div class="card-h"><h2>Куда уходят деньги</h2><span class="sub" id="costKm"></span></div>
-        <div class="costbar" id="costBar"></div>
-        <div class="costlist" id="costList"></div>
-      </div>
-
-      <div class="card">
-        <div class="card-h"><h2>Подсказки</h2></div>
-        <ul class="tips" id="tips"></ul>
-        <div class="btns" style="margin-top:14px">
-          <button class="btn primary" id="btnSave" type="button">Сохранить груз для сравнения</button>
-          <button class="btn blue" id="btnAsk" type="button" hidden>Спросить совет у Claude</button>
-          <button class="btn ghost" id="btnStop" type="button" hidden>Стоп</button>
-        </div>
-        <div class="advice" id="advice" hidden></div>
-      </div>
+    <div class="card">
+      <div class="card-h"><h2>Куда уходят деньги</h2><span class="sub" id="costKm"></span></div>
+      <div class="costbar" id="costBar"></div>
+      <div class="costlist" id="costList"></div>
     </div>
   </div>
 </section>
 
 <!-- ============ COMPARE ============ -->
 <section id="tab-compare" data-panel="compare" hidden>
-  <div class="page-h"><button class="back" type="button" data-go="home" aria-label="На главную"><b aria-hidden="true">‹</b>Главная</button><h2>Грузы и сравнение</h2></div>
   <div class="stack">
     <div class="card" id="simCard"></div>
     <div class="card-h" style="margin:4px 0 0;flex-wrap:wrap">
@@ -516,7 +595,6 @@ details.fold>.fold-body>.card>.card-h:first-child{display:none}
 
 <!-- ============ AXLES ============ -->
 <section id="tab-axles" data-panel="axles" hidden>
-  <div class="page-h"><button class="back" type="button" data-go="home" aria-label="На главную"><b aria-hidden="true">‹</b>Главная</button><h2>Нагрузка на оси</h2></div>
   <div class="grid ax-grid">
     <div class="stack">
       <div class="card">
@@ -568,7 +646,6 @@ details.fold>.fold-body>.card>.card-h:first-child{display:none}
 
 <!-- ============ PERMIT ============ -->
 <section id="tab-permit" data-panel="permit" hidden>
-  <div class="page-h"><button class="back" type="button" data-go="home" aria-label="На главную"><b aria-hidden="true">‹</b>Главная</button><h2>Проверка под разрешение</h2></div>
   <div class="grid">
     <div class="stack">
       <div class="card">
@@ -631,7 +708,6 @@ details.fold>.fold-body>.card>.card-h:first-child{display:none}
 
 <!-- ============ TOOLS ============ -->
 <section id="tab-tools" data-panel="tools" hidden>
-  <div class="page-h"><button class="back" type="button" data-go="home" aria-label="На главную"><b aria-hidden="true">‹</b>Главная</button><h2>Инструменты</h2></div>
   <div class="tools">
     <div class="card">
       <div class="card-h"><h2>Проверка габаритов на трале</h2></div>
@@ -679,7 +755,6 @@ details.fold>.fold-body>.card>.card-h:first-child{display:none}
 
 <!-- ============ SETTINGS ============ -->
 <section id="tab-settings" data-panel="settings" hidden>
-  <div class="page-h"><button class="back" type="button" data-go="home" aria-label="На главную"><b aria-hidden="true">‹</b>Главная</button><h2>Расходы и настройки</h2></div>
   <div class="set-grid" id="setGrid"></div>
   <div class="btns" style="margin-top:16px">
     <button class="btn danger" id="btnReset" type="button">Вернуть значения по умолчанию</button>
@@ -1082,7 +1157,7 @@ function renderLegs(){
 }
 
 /* ---------- results render ---------- */
-const COST_COLORS = {fuel:"var(--amber)", drv:"var(--blue)", plat:"#8E63CE", wear:"#2A9DA8", daily:"#D9739A", fixed:"#7C8C99", tax:"#B8613A"};
+const COST_COLORS = {fuel:"#3DDC84", drv:"#6CB6FF", plat:"#A68BF0", wear:"#2BB8A8", daily:"#F08DB4", fixed:"#8A9A92", tax:"#E08A5B"};
 function gaugeSVG(rate){
   const lo=40, hi=180, W=600, x=v=>8+(Math.min(hi,Math.max(lo,v))-lo)/(hi-lo)*(W-16);
   const xm=x(S.minRate), xt=x(S.targetRate), xr=x(rate);
@@ -1100,15 +1175,40 @@ function gaugeSVG(rate){
     ${has?`<path d="M${xr-8},4 L${xr+8},4 L${xr},18 Z" fill="var(--ink)"/>`:""}
   </svg>`;
 }
+const REDUCED = window.matchMedia && matchMedia("(prefers-reduced-motion: reduce)").matches;
+function renderMeter(rate){
+  const el=$("gauge"); const lo=40, hi=180, p=v=>(Math.min(hi,Math.max(lo,v))-lo)/(hi-lo)*100;
+  if(!el.querySelector(".meter")) el.innerHTML=`<div class="meter" role="img"><div class="trk"><i class="z-bad"></i><i class="z-ok"></i><i class="z-good"></i></div><b class="needle"></b><span class="tk tk-min"></span><span class="tk tk-t"></span></div>`;
+  const m=el.querySelector(".meter"), pm=p(S.minRate), pt=p(S.targetRate);
+  m.querySelector(".z-bad").style.width=`calc(${pm}% - 2px)`;
+  m.querySelector(".z-ok").style.width=`calc(${pt-pm}% - 2px)`;
+  m.querySelector(".z-good").style.width=`calc(${100-pt}% - 2px)`;
+  const a=m.querySelector(".tk-min"), b=m.querySelector(".tk-t");
+  a.style.left=pm+"%"; a.textContent="мин "+S.minRate; b.style.left=pt+"%"; b.textContent="цель "+S.targetRate;
+  const n=m.querySelector(".needle"); n.hidden=!(rate>0); if(rate>0) n.style.left=p(rate)+"%";
+  m.setAttribute("aria-label", rate>0? `Ставка ${fmt(rate)} ₽/км при минимуме ${S.minRate} и цели ${S.targetRate}` : "Ставка ещё не посчитана");
+}
+function tweenRate(el,val){
+  const from=parseFloat(el.dataset.v)||0; el.dataset.v=val>0?val:0; cancelAnimationFrame(el._raf);
+  if(!(val>0)){ el.textContent="—"; return; }
+  if(REDUCED||!from||Math.abs(from-val)<0.5){ el.textContent=fmt(val); return; }
+  const t0=performance.now(), d=380;
+  const step=t=>{ const k=Math.min(1,(t-t0)/d), e=1-Math.pow(1-k,3); el.textContent=fmt(from+(val-from)*e); if(k<1) el._raf=requestAnimationFrame(step); };
+  el._raf=requestAnimationFrame(step);
+}
+let LAST_V=null;
 function renderResults(){
   const c = calc(T), v = verdictOf(c.real);
   const box=$("verdict"); box.className="verdict v-"+v;
+  if(LAST_V!==null && LAST_V!==v && v!=="none" && !REDUCED){ void box.offsetWidth; box.classList.add("bump"); }
+  LAST_V=v;
   $("vState").textContent = V_LABEL[v];
-  $("vRate").textContent = c.real>0? fmt(c.real) : "—";
+  tweenRate($("vRate"), c.real);
+  const tb=document.querySelector('.tabbar [data-nav="trip"]'); if(tb){ if(v==="none") delete tb.dataset.v; else tb.dataset.v=v; }
   let paper = "";
   if (c.paperMain>0) paper = `На бумаге груз ${fmt(c.paperMain)} ₽/км`+(c.paperBack>0?`, обратка ${fmt(c.paperBack)} ₽/км`:"")+`. Маршрут ${fmt(c.total)} км, из них пустых ${fmt(c.empty)} (${c.total?Math.round(c.empty/c.total*100):0}%).`;
   $("vPaper").textContent = paper;
-  $("gauge").innerHTML = gaugeSVG(c.real);
+  renderMeter(c.real);
   $("routeBar").innerHTML = c.legs.filter(l=>l.km>0).map(l=>`<span class="${l.kind}" style="flex:${l.km}" title="${esc(l.a)} → ${esc(l.b)}: ${fmt(l.km)} км"></span>`).join("");
   $("routeLegend").innerHTML = `<span><i style="background:var(--blue)"></i>с грузом ${fmt(c.loaded)} км</span><span><i style="background:repeating-linear-gradient(90deg,var(--empty-leg) 0 4px,transparent 4px 6px)"></i>пустой ${fmt(c.empty)} км</span><span>≈ ${f1(c.days)} сут.</span>`;
 
@@ -1268,7 +1368,7 @@ function renderCompare(){
   const m=T.main, sims = (m.from&&m.to)? similarTo(m.from,m.to) : [];
   const c = calc(T);
   const sc=$("simCard");
-  if (!m.from||!m.to){ sc.innerHTML=`<h2>Похожие грузы</h2><p class="sub">Заполни груз во вкладке «Рейс».</p>`; }
+  if (!m.from||!m.to){ sc.innerHTML=`<h2>Похожие грузы</h2><p class="sub">Заполни груз во вкладке «Расчёт».</p>`; }
   else if (!sims.length){
     sc.innerHTML = `<div class="card-h"><h2>Похожие на ${esc(shortName(m.from))} → ${esc(shortName(m.to))}</h2></div>
       <p class="sub">Пока не с чем сравнить. Сохраняй грузы, которые смотришь на ATI (даже те, что не взял), и здесь появится средняя ставка по направлению и место текущего груза среди них.</p>`;
@@ -1292,7 +1392,7 @@ function renderCompare(){
   const sort=$("sortBy").value;
   const rows=[...SAVED].sort((a,b)=> sort==="date"? b.ts-a.ts : sort==="profit"? b.profit-a.profit : b.real-a.real);
   if (!rows.length){
-    $("tblWrap").innerHTML = `<div class="empty-state"><b>Здесь будут твои грузы</b>Во вкладке «Рейс» нажми «Сохранить груз для сравнения». Грузы выстроятся по реальной ставке по маршруту, и можно будет попросить Claude выбрать лучший.</div>`;
+    $("tblWrap").innerHTML = `<div class="empty-state"><b>Здесь будут твои грузы</b>Во вкладке «Расчёт» нажми «Сохранить груз для сравнения». Грузы выстроятся по реальной ставке по маршруту, и можно будет попросить Claude выбрать лучший.</div>`;
   } else {
     $("tblWrap").innerHTML = `<table><thead><tr><th></th><th>Маршрут</th><th>Тип</th><th class="r">Ставка</th><th class="r">На бумаге</th><th class="r">Км</th><th class="r">Реально</th><th class="r">Прибыль</th><th></th></tr></thead><tbody>
     ${rows.map(r=>{ const v=verdictOf(r.real); return `<tr>
@@ -1833,7 +1933,7 @@ function obstVerdict(o){
 function renderPermit(){
   if ($("tab-permit").hidden) return;
   const R=permitRoute();
-  $("p_routeTxt").textContent = R.legs.length ? "Маршрут из вкладки «Рейс»: "+R.legs.map(l=>shortName(l.a)+" → "+shortName(l.b)).join(", ")+` · ${fmt(R.total)} км` : "Заполни маршрут во вкладке «Рейс».";
+  $("p_routeTxt").textContent = R.legs.length ? "Маршрут из вкладки «Расчёт»: "+R.legs.map(l=>shortName(l.a)+" → "+shortName(l.b)).join(", ")+` · ${fmt(R.total)} км` : "Заполни маршрут во вкладке «Расчёт».";
   const rad=Math.max(0.5,PM.rad||3);
   // requirements
   const kg = PM.h>4.0 || PM.w>2.55 || PM.l>20 || PM.oh>2;
@@ -1878,7 +1978,7 @@ function renderPermit(){
   if(heavy && big.length) split.push(["ok",`<b>Мосты через крупные реки (${big.length})</b>: ${big.map(b=>`${esc(b.n)} (${fmt(b.km)} км)`).join(", ")}. Для тяжеловеса это главные кандидаты на обследование или отказ владельца дороги, именно на них чаще всего делят разрешение.`]);
   const nReg=new Set(regsF.map(r=>r.rg)).size;
   if(nReg>1) split.push(["info",`Маршрут идёт через ${nReg} ${nReg<5?"региона":"регионов"}. Разрешение одно, но каждый владелец дорог согласует свой участок, и отказ одного региона заставит менять маршрут.`]);
-  if(!split.length) split.push(["good", R.segs.length? "Своих препятствий на маршруте нет. Это не значит, что их нет в реальности: отмечай низкие мосты и узкие места, когда о них узнаёшь." : "Заполни маршрут во вкладке «Рейс»."]);
+  if(!split.length) split.push(["good", R.segs.length? "Своих препятствий на маршруте нет. Это не значит, что их нет в реальности: отмечай низкие мосты и узкие места, когда о них узнаёшь." : "Заполни маршрут во вкладке «Расчёт»."]);
   $("p_split").innerHTML=split.map(t=>`<li class="t-${t[0]}">${t[1]}</li>`).join("");
 
   const vb=$("p_verdict"), st=$("p_state");
@@ -2068,10 +2168,6 @@ function foldCard(card, title, keepHead, open){
 }
 function layoutMinimal(){
   // trip
-  const st=document.querySelector("#tab-trip .grid > .stack");
-  const order=[$("m_from").closest(".card"), $("verdict"), $("kpis"), $("b_on").closest(".card"), $("tips").closest(".card"), $("map").closest(".map-card"), $("legs").closest(".card"), $("costBar").closest(".card")];
-  order.forEach(e=>e&&st.appendChild(e));
-  document.querySelectorAll("#tab-trip .grid > .stack").forEach((x,i)=>{ if(i>0) x.remove(); });
   foldCard($("map").closest(".map-card"),"Карта маршрута",true,false);
   foldCard($("legs").closest(".card"),"Километраж по участкам",false,false);
   foldCard($("costBar").closest(".card"),"Куда уходят деньги",false,false);
@@ -2099,10 +2195,16 @@ $("fabNew").addEventListener("click",()=>{
   toast("Новый расчёт");
 });
 /* ---------- tabs ---------- */
+const TITLES={trip:"Расчёт рейса",compare:"Грузы",axles:"Нагрузка на оси",permit:"Разрешение",more:"Ещё",tools:"Инструменты",settings:"Настройки"};
 function switchTab(name){
+  if(!TITLES[name]) name="trip";
+  const navName = (name==="tools"||name==="settings")? "more" : name;
+  $("appTitle").textContent=TITLES[name];
+  $("fabNew").hidden = name!=="trip";
+  $("appBack").hidden = navName!=="more" || name==="more";
+  document.querySelectorAll(".tabbar [data-nav]").forEach(b=>{ const on=b.dataset.nav===navName; b.classList.toggle("on",on); if(on) b.setAttribute("aria-current","page"); else b.removeAttribute("aria-current"); });
   document.querySelectorAll(".tab").forEach(t=>t.setAttribute("aria-selected",String(t.dataset.tab===name)));
   document.querySelectorAll("[data-panel]").forEach(p=>p.hidden = p.dataset.panel!==name);
-  document.querySelectorAll("[data-nav]").forEach(b=>b.classList.toggle("on", b.dataset.nav===name));
   window.scrollTo(0,0);
   if(name==="home") renderHome();
   if(name==="compare") renderCompare();
@@ -2117,7 +2219,7 @@ pmFill(); enableZoom("map"); enableZoom("pmap"); layoutMinimal();
 fillTripForm(); renderSettings(); refreshAll(true); renderAxForm(); renderAx();
 loadSettlements();
 $("t_day").placeholder=String(S.kmPerDay);
-try{ const tb=sessionStorage.getItem("tr_tab"); if(tb) switchTab(tb); }catch(e){}
+let TB0="trip"; try{ TB0=sessionStorage.getItem("tr_tab")||"trip"; }catch(e){} switchTab(TB0);
 $("chipStore").textContent="Данные хранятся на этом устройстве";
 
 (async function connect(){
@@ -2147,8 +2249,8 @@ $("chipStore").textContent="Данные хранятся на этом устр
 
 <script>
 /* data credits */
-(function(){ const st=document.querySelector("#tab-home .status"); if(!st) return;
-  const p=document.createElement("p"); p.className="hint"; p.style.cssText="margin:14px 0 0;font-size:12px";
+(function(){ const st=document.querySelector("#tab-more .status"); if(!st) return;
+  const p=document.createElement("p"); p.className="hint"; p.style.cssText="margin:6px 0 0;font-size:12.5px";
   p.textContent="Справочник населённых пунктов: Минздрав РФ, обработка ЦПУР (data-in.ru), лицензия CC BY-NC-SA 4.0. Карта дорог и рек: Natural Earth.";
   st.after(p); })();
 /* offline mode */
