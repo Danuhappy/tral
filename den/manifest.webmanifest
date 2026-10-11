@@ -1,0 +1,17 @@
+{
+  "name": "Мой день",
+  "short_name": "Мой день",
+  "description": "Задачи с напоминаниями, мысли по разделам и учёт трат",
+  "lang": "ru",
+  "start_url": "./",
+  "scope": "./",
+  "display": "standalone",
+  "orientation": "portrait",
+  "background_color": "#EDF0F3",
+  "theme_color": "#EDF0F3",
+  "icons": [
+    {"src": "icons/icon-192.png", "sizes": "192x192", "type": "image/png"},
+    {"src": "icons/icon-512.png", "sizes": "512x512", "type": "image/png"},
+    {"src": "icons/icon-512-maskable.png", "sizes": "512x512", "type": "image/png", "purpose": "maskable"}
+  ]
+}
