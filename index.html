@@ -482,6 +482,8 @@ body.sheet-open{overflow:hidden}
 @keyframes sheetUp{from{transform:translateY(40px);opacity:.001}to{transform:none;opacity:1}}
 @keyframes fadeIn{from{opacity:.001}to{opacity:1}}
 .icon-btn.only{padding:0;width:44px}
+.seg.place{display:flex;width:100%}
+.seg.place button{flex:1}
 
 </style>
 
@@ -728,7 +730,7 @@ body.sheet-open{overflow:hidden}
     <div class="card">
       <div class="card-h"><h2>Грузы на площадке</h2><button class="btn small" type="button" id="a_add">+ Ещё груз</button></div>
       <div class="cargo-list" id="a_cargo"></div>
-      <p class="hint" style="margin:10px 0 0">Первый груз берётся из вкладки «Грузы». Положение считается от начала площадки (сразу за гусаком) до переднего края груза. Если центр тяжести не по середине (экскаватор, кран), впиши его, так точнее.</p>
+      <p class="hint" style="margin:10px 0 0">Первый груз берётся из вкладки «Грузы». Груз можно поставить на нижнюю площадку или на гусёк. Положение считается до переднего края груза: на площадке от её начала (сразу за гуськом), на гуське от переднего края гуська. Если центр тяжести не по середине (экскаватор, кран), впиши его, так точнее.</p>
     </div>
 
     <div class="card">
@@ -1801,11 +1803,11 @@ const TRACTORS = {
   custom:{name:"Свой тягач"}
 };
 const TRAILERS = {
-  r3:{name:"Трал 3 оси, низкорамный", mass:11, king0:4.5, goose:3.0, plat:9.6, deckH:0.9, a1:9.0, n:3, sp:1.36, lift:0, ext:0, wheels:2, dual:true, kingMax:18, trainLen:20},
-  r4:{name:"Трал 4 оси", mass:14, king0:5.5, goose:3.2, plat:10.0, deckH:0.9, a1:9.4, n:4, sp:1.36, lift:0, ext:0, wheels:2, dual:true, kingMax:20, trainLen:21},
-  r5:{name:"Трал 5 осей, раздвижной", mass:18, king0:7, goose:3.4, plat:10.5, deckH:0.95, a1:9.8, n:5, sp:1.36, lift:0, ext:0, wheels:2, dual:true, kingMax:24, trainLen:22.5},
-  r6:{name:"Трал 6 осей", mass:22, king0:8.5, goose:3.5, plat:11.5, deckH:1.0, a1:10.2, n:6, sp:1.36, lift:0, ext:0, wheels:2, dual:true, kingMax:25, trainLen:24},
-  r4m:{name:"Модульный 4 оси, 4 колеса на оси", mass:20, king0:7, goose:3.5, plat:10.0, deckH:1.0, a1:9.8, n:4, sp:1.51, lift:0, ext:0, wheels:4, dual:false, kingMax:25, trainLen:22},
+  r3:{name:"Трал 3 оси, низкорамный", mass:11, king0:4.5, goose:3.0, gl:3.4, gh:1.45, plat:9.6, deckH:0.9, a1:9.0, n:3, sp:1.36, lift:0, ext:0, wheels:2, dual:true, kingMax:18, trainLen:20},
+  r4:{name:"Трал 4 оси", mass:14, king0:5.5, goose:3.2, gl:3.6, gh:1.45, plat:10.0, deckH:0.9, a1:9.4, n:4, sp:1.36, lift:0, ext:0, wheels:2, dual:true, kingMax:20, trainLen:21},
+  r5:{name:"Трал 5 осей, раздвижной", mass:18, king0:7, goose:3.4, gl:3.8, gh:1.45, plat:10.5, deckH:0.95, a1:9.8, n:5, sp:1.36, lift:0, ext:0, wheels:2, dual:true, kingMax:24, trainLen:22.5},
+  r6:{name:"Трал 6 осей", mass:22, king0:8.5, goose:3.5, gl:3.9, gh:1.45, plat:11.5, deckH:1.0, a1:10.2, n:6, sp:1.36, lift:0, ext:0, wheels:2, dual:true, kingMax:25, trainLen:24},
+  r4m:{name:"Модульный 4 оси, 4 колеса на оси", mass:20, king0:7, goose:3.5, gl:3.9, gh:1.45, plat:10.0, deckH:1.0, a1:9.8, n:4, sp:1.51, lift:0, ext:0, wheels:4, dual:false, kingMax:25, trainLen:22},
   custom:{name:"Свой трал"}
 };
 const T_FIELDS = [
@@ -1819,14 +1821,16 @@ const T_FIELDS = [
 const R_FIELDS = [
   ["mass","Масса пустого трала","т",""],
   ["king0","Пустой трал давит на седло","т","По взвешиванию или из паспорта"],
-  ["goose","Шкворень → начало площадки","м",""],
+  ["goose","Гусёк → начало нижней площадки","м","От центра сцепки с седлом"],
+  ["gl","Верхняя площадка гуська: длина","м","Где можно поставить груз на гусёк"],
+  ["gh","Высота верхней площадки гуська","м",""],
   ["plat","Длина площадки","м",""],
   ["deckH","Погрузочная высота","м",""],
-  ["a1","Шкворень → первая ось трала","м","Рулеткой по земле"],
+  ["a1","Гусёк → первая ось трала","м","От центра сцепки, рулеткой по земле"],
   ["n","Осей у трала","шт",""],
   ["lift","Поднято осей (передних)","шт",""],
   ["ext","Раздвижка","м",""],
-  ["kingMax","Допустимо на шкворень","т","Из паспорта трала"],
+  ["kingMax","Допустимо на гусёк","т","Из паспорта трала"],
   ["trainLen","Длина автопоезда","м","Тягач с тралом, без груза"]];
 const CARGO_COLORS = ["var(--amber)","#6CB6FF","#A68BF0","#F08DB4","#8A9A92","#E08A5B"];
 
@@ -1834,13 +1838,14 @@ function presetT(k){ const p=Object.assign({},TRACTORS[k]); delete p.name; retur
 function presetR(k){ const p=Object.assign({},TRAILERS[k]); delete p.name; return p; }
 function newAx(){ return {v:2, tp:"t64", rp:"r4", t:presetT("t64"), r:presetR("r4"), road:"10", custom:{on:false,front:9,rear:8,trailer:7,gross:44}, train:null,
   cargo:[{name:"Бульдозер (пример)", m:15, len:5, pos:2.0}]}; }
+function fixR(r){ if(!r) return r; if(r.gl==null||r.gl==="") r.gl=Math.round((num(r.goose)+0.4)*10)/10; if(r.gh==null||r.gh==="") r.gh=1.45; return r; }
 function migrateAx(a){
   if(!a||!a.t||!a.r) return newAx();
-  if(a.v===2) return a;
+  if(a.v===2){ fixR(a.r); return a; }
   const t=a.t, r=a.r, nr=Math.round(t.rearAxles||2), n=Math.round(r.n||3);
   const nt={frontMass:t.frontMass, rearMass:t.rearMass, frontAxles:t.frontAxles||1, fsp:(t.frontAxles>=2?1.8:0), A:num(t.W)-(nr-1)*num(t.sp)/2, rearAxles:nr, rsp:nr>1?num(t.sp):0, s:t.s, kingMax:20};
   const a1=num(r.axC)-(n-1)*num(r.sp)/2, king0=num(r.mass)-num(r.mass)*num(r.cg)/Math.max(0.5,num(r.axC));
-  const nrr={mass:r.mass, king0:Math.round(king0*10)/10, goose:r.goose, plat:r.plat, deckH:0.9, a1:Math.round(a1*100)/100, n, sp:r.sp, lift:r.lift||0, ext:r.ext||0, wheels:2, dual:true, kingMax:20, trainLen:20+Math.max(0,n-3)};
+  const nrr={gl:Math.round((num(r.goose)+0.4)*10)/10, gh:1.45, mass:r.mass, king0:Math.round(king0*10)/10, goose:r.goose, plat:r.plat, deckH:0.9, a1:Math.round(a1*100)/100, n, sp:r.sp, lift:r.lift||0, ext:r.ext||0, wheels:2, dual:true, kingMax:20, trainLen:20+Math.max(0,n-3)};
   return {v:2, tp:a.tp==="t64"||a.tp==="t42"||a.tp==="t84"?a.tp:"custom", rp:"custom", t:nt, r:nrr, road:"10", custom:{on:false,front:9,rear:8,trailer:7,gross:44}, train:null, cargo:a.cargo||[]};
 }
 let AX = migrateAx(lsGet("tr_axles"));
@@ -1905,8 +1910,11 @@ function trailerGeo(r){
   const L0=meanArr(all0);                                      // centre of all axles, not extended
   const mass=Math.max(0.1,num(r.mass)), king0=Math.min(mass,Math.max(0,num(r.king0)));
   const cg=(mass-king0)*L0/mass + ext*0.5;                     // empty trailer centre of gravity from the kingpin
-  return {n, lift, ext, all, down, Lc:meanArr(down), cg, platLen:num(r.plat)+ext, deckStart:num(r.goose)};
+  const gl=num(r.gl)>0? num(r.gl) : num(r.goose)+0.4;
+  return {n, lift, ext, all, down, Lc:meanArr(down), cg, platLen:num(r.plat)+ext, deckStart:num(r.goose), gooseLen:gl, gooseStart:num(r.goose)-gl};
 }
+/* front edge of a cargo item, measured from the coupling point: on the gooseneck or on the lower deck */
+const cargoX = (c,rg) => c.on==="goose" ? rg.gooseStart+num(c.pos) : rg.deckStart+num(c.pos);
 const cargoCgX = c => (c.cg!=null && c.cg!=="" && num(c.cg)>0) ? num(c.cg) : num(c.len)/2;
 
 function axCalc(ax){
@@ -1914,9 +1922,9 @@ function axCalc(ax){
   const tg=tractorGeo(t), rg=trailerGeo(r);
   let mass=num(r.mass), mom=num(r.mass)*rg.cg, cargoM=0, overhang=0, front=0;
   for (const c of ax.cargo){
-    const m=num(c.m), x=rg.deckStart+num(c.pos)+cargoCgX(c);
+    const m=num(c.m), x=cargoX(c,rg)+cargoCgX(c);
     mass+=m; mom+=m*x; cargoM+=m;
-    overhang=Math.max(overhang, num(c.pos)+num(c.len)-rg.platLen);
+    if(c.on!=="goose") overhang=Math.max(overhang, num(c.pos)+num(c.len)-rg.platLen);
     front=Math.max(front, -num(c.pos)-rg.deckStart);
   }
   const trailerLoad = rg.Lc>0? mom/rg.Lc : 0;                  // all lowered trailer axles together
@@ -1976,16 +1984,17 @@ function renderGaps(){
   $("a_rgaps").innerHTML = n>1? gapInputs("r","sp",n-1,1.36,"Оси ") : `<p class="hint" style="margin:0;grid-column:1/-1">У трала одна ось.</p>`;
 }
 function renderCargoForm(){
-  const platLen = num(AX.r.plat) + Math.max(0,num(AX.r.ext));
+  const rg=trailerGeo(AX.r);
   $("a_cargo").innerHTML = AX.cargo.map((c,i)=>{
-    const maxPos = Math.max(0, platLen - num(c.len));
+    const room = c.on==="goose"? rg.gooseLen : rg.platLen, maxPos = Math.max(0, room - num(c.len));
     return `<div class="cargo" data-i="${i}">
       <div class="cargo-h"><b><i style="background:${CARGO_COLORS[i%CARGO_COLORS.length]}"></i><input class="inp" data-c="name" value="${esc(c.name)}" style="padding:6px 8px;font-weight:600" aria-label="Название груза"></b>
         ${AX.cargo.length>1?`<button class="btn small danger" type="button" data-cdel="${i}">Убрать</button>`:""}</div>
+      <div class="seg place" role="group" aria-label="Куда поставить"><button type="button" data-place="deck" aria-pressed="${c.on!=="goose"}">На площадку</button><button type="button" data-place="goose" aria-pressed="${c.on==="goose"}">На гусёк</button></div>
       <div class="fields">
         <label class="f">Масса<div class="unit"><input class="inp num" data-c="m" value="${esc(c.m)}" inputmode="decimal"><span>т</span></div></label>
         <label class="f">Длина<div class="unit"><input class="inp num" data-c="len" value="${esc(c.len)}" inputmode="decimal"><span>м</span></div></label>
-        <label class="f">От начала площадки<div class="unit"><input class="inp num" data-c="pos" value="${esc(c.pos)}" inputmode="decimal"><span>м</span></div></label>
+        <label class="f">${c.on==="goose"?"От переднего края гуська":"От начала площадки"}<div class="unit"><input class="inp num" data-c="pos" value="${esc(c.pos)}" inputmode="decimal"><span>м</span></div></label>
         <label class="f">Центр тяжести от переда<div class="unit"><input class="inp num" data-c="cg" value="${esc(c.cg??"")}" placeholder="середина" inputmode="decimal"><span>м</span></div></label>
       </div>
       <input type="range" data-c="range" min="0" max="${maxPos.toFixed(2)}" step="0.05" value="${Math.min(num(c.pos),maxPos)}" aria-label="Сдвинуть груз по площадке">
@@ -1996,7 +2005,7 @@ function axSVG(ax,res){
   const tg=res.tg, rg=res.rg, xk=tg.xk;
   const pStart = xk + rg.deckStart, pEnd = pStart + rg.platLen;
   const trX = rg.all.map(x=>xk+x);
-  const xmin=Math.min(-1.8, tg.front[0]-1.8), xmax=Math.max(pEnd, trX[trX.length-1]+0.9, ...ax.cargo.map(c=>pStart+num(c.pos)+num(c.len)))+0.4;
+  const xmin=Math.min(-1.8, tg.front[0]-1.8, ...ax.cargo.map(c=>xk+cargoX(c,rg))), xmax=Math.max(pEnd, trX[trX.length-1]+0.9, ...ax.cargo.map(c=>xk+cargoX(c,rg)+num(c.len)))+0.4;
   const VW=600, VH=250, sc=(VW-20)/(xmax-xmin), X=v=>10+(v-xmin)*sc;
   const G=186, wr=11;
   let s=`<svg viewBox="0 0 ${VW} ${VH}" role="img" aria-label="Схема погрузки">`;
@@ -2009,17 +2018,19 @@ function axSVG(ax,res){
   const deckEnd = Math.max(pEnd, trX[trX.length-1]+0.7);
   s+=`<path d="M${X(xk-0.6)},${G-34} L${X(pStart-0.4)},${G-34} L${X(pStart)},${G-24} L${X(pStart)},${G-14} L${X(pStart-0.6)},${G-14} L${X(pStart-0.9)},${G-22} L${X(xk-0.6)},${G-22} Z" fill="#5B6B63"/>`;
   s+=`<rect x="${X(pStart)}" y="${G-24}" width="${X(deckEnd)-X(pStart)}" height="10" rx="2" fill="#5B6B63"/>`;
-  s+=`<line x1="${X(xk)}" y1="${G-44}" x2="${X(xk)}" y2="${G-22}" stroke="var(--amber)" stroke-width="2" stroke-dasharray="3 3"/>`;
-  s+=`<text x="${X(xk)}" y="${G-48}" text-anchor="middle" font-size="18" fill="var(--muted)">седло ${f1(res.king)} т</text>`;
+  const gS=xk+rg.gooseStart, gH=G-58;
+  s+=`<rect x="${X(gS)}" y="${gH}" width="${X(pStart)-X(gS)}" height="12" rx="3" fill="#5B6B63"/>`;
+  s+=`<line x1="${X(xk)}" y1="${G-14}" x2="${X(xk)}" y2="${G+42}" stroke="var(--amber)" stroke-width="2" stroke-dasharray="3 3"/>`;
+  s+=`<text x="${X(xk)}" y="${G+60}" text-anchor="middle" font-size="16" fill="var(--muted)">седло ${f1(res.king)} т</text>`;
   s+=`<text x="${X(pStart)}" y="${G+60}" font-size="16" fill="var(--muted)">0 м</text>`;
   s+=`<text x="${X(pEnd)}" y="${G+54}" text-anchor="end" font-size="16" fill="var(--muted)">${f1(res.platLen)} м</text>`;
   s+=`<line x1="${X(pStart)}" y1="${G+44}" x2="${X(pEnd)}" y2="${G+44}" stroke="var(--muted)" stroke-width="1"/>`;
   ax.cargo.forEach((c,i)=>{
-    const x0=X(pStart+num(c.pos)), w=Math.max(4,num(c.len)*sc), h=Math.min(110,40+num(c.m)*1.6);
+    const onG=c.on==="goose", base=onG? gH : G-24, x0=X(xk+cargoX(c,rg)), w=Math.max(4,num(c.len)*sc), h=Math.min(onG?80:110,40+num(c.m)*1.6);
     const col=CARGO_COLORS[i%CARGO_COLORS.length];
-    s+=`<rect x="${x0}" y="${G-24-h}" width="${w}" height="${h}" rx="5" fill="${col}" opacity=".92"/>`;
-    s+=`<text x="${x0+w/2}" y="${G-24-h/2+5}" text-anchor="middle" font-size="20" font-weight="700" fill="#06120B">${f1(num(c.m))} т</text>`;
-    const cg=X(pStart+num(c.pos)+cargoCgX(c)); s+=`<path d="M${cg-5},${G-28} L${cg+5},${G-28} L${cg},${G-20} Z" fill="#06120B"/>`;
+    s+=`<rect x="${x0}" y="${base-h}" width="${w}" height="${h}" rx="5" fill="${col}" opacity=".92"/>`;
+    s+=`<text x="${x0+w/2}" y="${base-h/2+7}" text-anchor="middle" font-size="20" font-weight="700" fill="#06120B">${f1(num(c.m))} т</text>`;
+    const cg=X(xk+cargoX(c,rg)+cargoCgX(c)); s+=`<path d="M${cg-5},${base-4} L${cg+5},${base-4} L${cg},${base+4} Z" fill="#06120B"/>`;
   });
   const wheel=(x,u,raised)=>`<circle cx="${X(x)}" cy="${G-(raised?10:0)}" r="${wr}" fill="${raised?"var(--surface-2)":"#0B0F0D"}" stroke="${raised?"var(--muted)":utilColor(u)}" stroke-width="4" ${raised?'stroke-dasharray="4 3"':''}/>`;
   const g=res.groups, gT=g.filter(x=>x.key==="trailer");
@@ -2051,13 +2062,14 @@ function renderAx(){
   $("a_normNote").textContent = AX.custom&&AX.custom.on ? "Нормы введены вручную." : `Нормы по ПП РФ №2200 (прил. 2 и 3) для дороги ${String(AX.road).replace(".",",")} т/ось. Весной и летом на региональных дорогах бывают временные ограничения, смотри знаки и сайт региона.`;
   const tips=[];
   const gf=res.groups[0], gr=res.groups[1], gts=res.groups.filter(g=>g.key==="trailer"), gtOver=gts.some(g=>g.util>1);
-  if (gtOver && gr.util<=1) tips.push(["bad",`Перегружены оси трала. Сдвинь груз вперёд, к гусаку: часть веса уйдёт на седло.`]);
+  if (gtOver && gr.util<=1) tips.push(["bad",`Перегружены оси трала. Сдвинь груз вперёд, к гуську, или поставь часть груза на гусёк: вес уйдёт на седло.`]);
   if (gr.util>1 && !gtOver) tips.push(["bad",`Перегружен зад тягача на ${f1(gr.load-gr.limGroup)} т. Сдвинь груз назад, к осям трала.`]);
   if (gr.util>1 && gtOver) tips.push(["bad","Перегружены и тягач, и трал. Перестановкой не исправить: нужно спецразрешение на тяжеловес или трал с большим числом осей."]);
-  if (gf.util>1) tips.push(["bad",`Перегружен перед тягача на ${f1(gf.load-gf.limGroup)} т. Груз прижат к гусаку или седло стоит слишком далеко вперёд.`]);
+  if (gf.util>1) tips.push(["bad",`Перегружен перед тягача на ${f1(gf.load-gf.limGroup)} т. Груз прижат к гуську или седло стоит слишком далеко вперёд.`]);
   if (kingOver) tips.push(["bad",`Нагрузка на седло ${f1(res.king)} т больше допустимой ${f1(res.kingMax)} т. Сдвинь груз назад.`]);
   if (res.frontShare<0.2 && res.king>0) tips.push(["ok",`На переднюю ось приходится только ${Math.round(res.frontShare*100)}% веса тягача. Управляемость будет плохой, сдвинь груз вперёд.`]);
-  if (res.king<0) tips.push(["bad","Груз стоит за осями трала и отрывает гусак от седла. Так ехать нельзя, сдвинь груз вперёд."]);
+  if (res.king<0) tips.push(["bad","Груз стоит за осями трала и отрывает гусёк от седла. Так ехать нельзя, сдвинь груз вперёд."]);
+  AX.cargo.forEach(c=>{ if(c.on==="goose" && num(c.pos)+num(c.len)>res.rg.gooseLen+0.01) tips.push(["ok",`«${esc(c.name)}» не помещается на гусёк: длина ${f1(num(c.len))} м, а места ${f1(res.rg.gooseLen)} м.`]); });
   if (res.overhang>0) tips.push(["ok",`Груз выходит за площадку на ${f1(res.overhang)} м.${res.overhang>2?" Свес больше 2 м, это негабарит по длине.":""}`]);
   if (res.lift>0 && gts.some(g=>g.util>0.9)) tips.push(["info","Опусти подъёмную ось: нагрузка на остальные оси трала упадёт."]);
   if (gts.length>1) tips.push(["info","Между осями трала больше 2,5 м, это отдельные оси. Нагрузку между ними программа делит поровну, точнее покажут весы."]);
@@ -2092,7 +2104,7 @@ function renderTrainPick(onlyState){
 }
 function loadTrain(id){
   const tr=TRAINS.find(x=>x.id===id); if(!tr) return;
-  const c=JSON.parse(JSON.stringify(tr));
+  const c=JSON.parse(JSON.stringify(tr)); fixR(c.r);
   Object.assign(AX,{t:c.t, r:c.r, tp:c.tp, rp:c.rp, road:c.road, custom:c.custom, train:c.id});
   renderAxForm(); axChanged(true);
   toast("Автопоезд: "+tr.name);
@@ -2151,11 +2163,15 @@ $("tab-axles").addEventListener("input",e=>{
   if (el.dataset.c==="range"){ c.pos=Math.round(num(el.value)*100)/100; card.querySelector('[data-c="pos"]').value=c.pos; axChanged(false); return; }
   c[el.dataset.c]= el.dataset.c==="cg" && el.value.trim()==="" ? "" : num(el.value);
   if (el.dataset.c==="pos"){ const rg=card.querySelector('[data-c="range"]'); rg.value=c.pos; }
-  if (el.dataset.c==="len"){ const rg=card.querySelector('[data-c="range"]'); rg.max=Math.max(0,num(AX.r.plat)+num(AX.r.ext)-c.len).toFixed(2); }
+  if (el.dataset.c==="len"){ const rg=card.querySelector('[data-c="range"]'), g=trailerGeo(AX.r); rg.max=Math.max(0,(c.on==="goose"?g.gooseLen:g.platLen)-c.len).toFixed(2); }
   if (i===0 && ["m","len","cg"].includes(el.dataset.c)){ CARGO[el.dataset.c==="len"?"l":el.dataset.c]=c[el.dataset.c]; saveCargo(); renderCargoCard(); }
   axChanged(false);
 });
 $("a_cargo").addEventListener("click",e=>{
+  const pl=e.target.closest("[data-place]");
+  if(pl){ const i=+pl.closest(".cargo").dataset.i, c=AX.cargo[i]; if(c.on===pl.dataset.place || (!c.on&&pl.dataset.place==="deck")) return;
+    c.on=pl.dataset.place; c.pos=0; if(i===0){ CARGO.on=c.on; saveCargo(); } axChanged(true);
+    toast(c.on==="goose"?"Груз на гуське":"Груз на площадке"); return; }
   const d=e.target.closest("[data-cdel]"); if(!d) return;
   AX.cargo.splice(+d.dataset.cdel,1); axChanged(true);
 });
@@ -2166,7 +2182,7 @@ $("a_add").addEventListener("click",()=>{
   axChanged(true);
 });
 function bestPos(idx){
-  const c=AX.cargo[idx], keep=c.pos, platLen=num(AX.r.plat)+Math.max(0,num(AX.r.ext));
+  const c=AX.cargo[idx], keep=c.pos, g=trailerGeo(AX.r), platLen=c.on==="goose"? g.gooseLen : g.platLen;
   let best=keep, bestScore=Infinity;
   for (let p=0; p<=Math.max(0,platLen-num(c.len))+1e-9; p+=0.05){
     c.pos=Math.round(p*100)/100;
@@ -2183,8 +2199,9 @@ $("a_opt").addEventListener("click",()=>{
   const res=axCalc(AX);
   toast(res.maxUtil>1? `Лучшее место ${f1(best)} м, но перегруз всё равно есть` : `«${AX.cargo[idx].name}»: ${f1(best)} м от начала площадки`);
 });
+function standH(){ const c=AX.cargo[0]; return c&&c.on==="goose"? (num(AX.r.gh)||1.45) : (num(AX.r.deckH)||0.9); }
 function cargoType(){
-  const res=axCalc(AX), deckH=num(AX.r.deckH)||0.9;
+  const res=axCalc(AX), deckH=standH();
   const heavy = res.groups.some(g=>g.util>1) || res.grossUtil>1;
   const over = num(CARGO.w)>2.55 || num(CARGO.h)+deckH>4 || num(AX.r.trainLen)+res.overhang>20 || res.overhang>2;
   return over&&heavy?"both":heavy?"heavy":over?"over":"normal";
@@ -2201,10 +2218,10 @@ const cargoDims = c => `${f1(num(c.l))}×${f1(num(c.w))}×${f1(num(c.h))} м · 
 function renderCargoCard(){
   const map={cg_name:"name",cg_l:"l",cg_w:"w",cg_h:"h",cg_m:"m",cg_cg:"cg"};
   for(const [id,k] of Object.entries(map)){ const el=$(id); if(document.activeElement!==el) el.value=CARGO[k]??""; }
-  const res=axCalc(AX), deckH=num(AX.r.deckH)||0.9, H=num(CARGO.h)+deckH, W=num(CARGO.w), L=num(AX.r.trainLen)+res.overhang, type=cargoType();
+  const res=axCalc(AX), deckH=standH(), H=num(CARGO.h)+deckH, W=num(CARGO.w), L=num(AX.r.trainLen)+res.overhang, type=cargoType();
   const row=(ok,a,b)=>`<div class="check"><span class="ic ${ok?"ok":"no"}">${ok?"✓":"!"}</span><div><b>${a}</b><div class="hint">${b}</div></div></div>`;
   $("cg_out").innerHTML = !num(CARGO.m)&&!num(CARGO.l) ? `<p class="hint" style="margin:0">Впиши размеры и массу, и они сами появятся в «Осях», «Разрешении» и «Расчёте».</p>` :
-    row(H<=4,`Высота с тралом ${f1(H)} м`, H<=4?"до 4 м, в норме":`выше 4 м на ${f1(H-4)} м`)
+    row(H<=4,`Высота с тралом ${f1(H)} м${AX.cargo[0]&&AX.cargo[0].on==="goose"?" (на гуське)":""}`, H<=4?"до 4 м, в норме":`выше 4 м на ${f1(H-4)} м`)
     + row(W<=2.55,`Ширина ${f1(W)} м`, W<=2.55?"до 2,55 м, в норме":`шире 2,55 м на ${f1(W-2.55)} м`)
     + row(L<=20&&res.overhang<=2,`Длина автопоезда ${f1(L)} м`, res.overhang>2?`свес ${f1(res.overhang)} м`:(L<=20?"до 20 м, в норме":"длиннее 20 м"))
     + row(res.grossUtil<=1 && !res.groups.some(g=>g.util>1),`Полная масса ${f1(res.total)} т`, res.groups.some(g=>g.util>1)?"перегруз по осям, смотри «Оси»":res.grossUtil<=1?`норма ${f1(res.gross)} т`:`больше нормы на ${f1(res.total-res.gross)} т`)
@@ -2229,7 +2246,7 @@ function renderTripCargo(){
   el.innerHTML = has? `<span>Груз: <b>${esc(CARGO.name||"без названия")}</b> · ${cargoDims(CARGO)}</span><span class="chev" aria-hidden="true">›</span>` : `<span>Указать габариты и вес груза</span><span class="chev" aria-hidden="true">›</span>`;
 }
 function syncDerived(){
-  const res=axCalc(AX), deckH=num(AX.r.deckH)||0.9;
+  const res=axCalc(AX), deckH=standH();
   // tools: gabarit check
   const setV=(id,v)=>{ const el=$(id); if(el && document.activeElement!==el) el.value = Math.round(v*100)/100; };
   setV("g_l",num(CARGO.l)); setV("g_w",num(CARGO.w)); setV("g_h",num(CARGO.h)); setV("g_m",res.cargoM);
@@ -2250,8 +2267,8 @@ function syncDerived(){
 function cargoToAxles(place){
   if(!AX.cargo.length) AX.cargo.push({pos:0});
   const c=AX.cargo[0];
-  Object.assign(c,{name:CARGO.name||"Груз", m:num(CARGO.m), len:num(CARGO.l), cg:CARGO.cg});
-  const platLen=num(AX.r.plat)+Math.max(0,num(AX.r.ext));
+  Object.assign(c,{name:CARGO.name||"Груз", m:num(CARGO.m), len:num(CARGO.l), cg:CARGO.cg, on:CARGO.on||c.on||"deck"});
+  const g=trailerGeo(AX.r), platLen=c.on==="goose"? g.gooseLen : g.platLen;
   if(place) bestPos(0); else c.pos=Math.max(0,Math.min(num(c.pos), Math.max(0,platLen-c.len)));
   saveAx(); renderCargoForm(); renderAx(); syncDerived();
 }
@@ -2262,7 +2279,7 @@ for(const [id,k] of Object.entries(CG_IDS)){
 $("cgSave").addEventListener("click",()=>{
   const name=String(CARGO.name||"").trim(); if(!name){ toast("Впиши название груза"); $("cg_name").focus(); return; }
   const ex=CLIB.find(x=>x.name.trim().toLowerCase()===name.toLowerCase());
-  const data={name, l:num(CARGO.l), w:num(CARGO.w), h:num(CARGO.h), m:num(CARGO.m), cg:CARGO.cg, ts:Date.now(), used:Date.now()};
+  const data={name, l:num(CARGO.l), w:num(CARGO.w), h:num(CARGO.h), m:num(CARGO.m), cg:CARGO.cg, on:(AX.cargo[0]&&AX.cargo[0].on)||"deck", ts:Date.now(), used:Date.now()};
   if(ex) Object.assign(ex,data); else CLIB.push(Object.assign({id:"c"+Date.now().toString(36)},data));
   saveLib(); renderCargoCard(); toast(ex?"Груз обновлён":"Груз сохранён");
 });
@@ -2273,7 +2290,7 @@ $("cgLib").addEventListener("click",e=>{
   if(d){ const x=CLIB.find(q=>q.id===d.dataset.ldel); if(x && confirm(`Удалить «${x.name}» из моих грузов?`)){ CLIB=CLIB.filter(q=>q!==x); saveLib(); renderLib(); } return; }
   if(p){ const x=CLIB.find(q=>q.id===p.dataset.pick); if(!x) return;
     x.used=Date.now(); saveLib();
-    CARGO={name:x.name,l:x.l,w:x.w,h:x.h,m:x.m,cg:x.cg??""}; saveCargo(); T.main.typeAuto=true;
+    CARGO={name:x.name,l:x.l,w:x.w,h:x.h,m:x.m,cg:x.cg??"",on:x.on||"deck"}; saveCargo(); T.main.typeAuto=true;
     cargoToAxles(true); toast(`«${x.name}» во всех вкладках`); }
 });
 $("m_type").addEventListener("change",()=>{ T.main.typeAuto=false; persistTrip(); });
