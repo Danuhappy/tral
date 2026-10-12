@@ -463,6 +463,25 @@ small.fh{display:block;font-size:12.5px;color:var(--muted);opacity:.85;font-weig
 .axi-r .bar{display:block;height:6px;border-radius:3px;background:var(--surface-3);overflow:hidden;margin-left:auto;width:100%}
 .axi-r .bar span{display:block;height:100%}
 #a_tfields,#a_rfields{align-items:start}
+.gap-h{font-size:14px;font-weight:600;color:var(--muted);margin:14px 0 8px}
+.fields.gaps{grid-template-columns:repeat(3,minmax(0,1fr))}
+.fields.gaps .unit .inp{padding-right:30px}
+.fields.gaps .unit span{right:10px}
+/* reorder sheet */
+.sheet{position:fixed;inset:0;z-index:40;background:rgba(0,0,0,.55);display:flex;align-items:flex-end;justify-content:center;animation:fadeIn .2s var(--ease)}
+.sheet-in{width:100%;max-width:600px;max-height:82vh;overflow-y:auto;background:var(--surface);border:1px solid var(--line);border-bottom:0;border-radius:22px 22px 0 0;padding:16px 16px calc(20px + env(safe-area-inset-bottom,0px));animation:sheetUp .28s var(--ease)}
+.sheet-h{display:flex;align-items:center;justify-content:space-between;gap:12px}
+.sheet-h b{font-size:19px}
+#reList{list-style:none;margin:12px 0;padding:0;display:flex;flex-direction:column;gap:6px}
+#reList li{display:flex;align-items:center;gap:6px;background:var(--surface-2);border-radius:14px;padding:6px 6px 6px 14px;min-height:56px}
+#reList li span{flex:1;min-width:0;font-size:16px;font-weight:500}
+.re-mv{width:44px;height:44px;border:0;border-radius:12px;background:var(--surface-3);color:var(--ink);display:grid;place-items:center;cursor:pointer}
+.re-mv:disabled{opacity:.3;cursor:default}
+.re-mv:not(:disabled):active{transform:scale(.94)}
+body.sheet-open{overflow:hidden}
+@keyframes sheetUp{from{transform:translateY(40px);opacity:.001}to{transform:none;opacity:1}}
+@keyframes fadeIn{from{opacity:.001}to{opacity:1}}
+.icon-btn.only{padding:0;width:44px}
 
 </style>
 
@@ -470,6 +489,7 @@ small.fh{display:block;font-size:12.5px;color:var(--muted);opacity:.85;font-weig
   <h1 id="appTitle">Расчёт рейса</h1>
   <div class="act">
     <button class="icon-btn back-btn" type="button" id="appBack" data-go="more" hidden><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="m15 18-6-6 6-6"/></svg>Ещё</button>
+    <button class="icon-btn only" type="button" id="reorderBtn" aria-label="Порядок панелей" title="Порядок панелей"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M8 20V4M4.5 7.5 8 4l3.5 3.5M16 4v16M12.5 16.5 16 20l3.5-3.5"/></svg></button>
     <button class="icon-btn" type="button" id="fabNew"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" aria-hidden="true"><path d="M12 5v14M5 12h14"/></svg>Новый</button>
   </div>
 </header>
@@ -636,6 +656,7 @@ small.fh{display:block;font-size:12.5px;color:var(--muted);opacity:.85;font-weig
     </div>
 
     <div class="card" id="simCard"></div>
+    <div class="saved-block">
     <div class="card-h" style="margin:4px 0 0;flex-wrap:wrap">
       <h2>Сохранённые рейсы</h2>
       <div class="btns">
@@ -649,6 +670,7 @@ small.fh{display:block;font-size:12.5px;color:var(--muted);opacity:.85;font-weig
     </div>
     <div class="tbl-wrap" id="tblWrap"></div>
     <div class="advice" id="adviceCompare" hidden></div>
+    </div>
   </div>
 </section>
 
@@ -668,8 +690,13 @@ small.fh{display:block;font-size:12.5px;color:var(--muted);opacity:.85;font-weig
         <p class="hint" style="margin:10px 0 0">В справочнике типовые значения. Для точного расчёта впиши свои: базы из ПТС, расстояния рулеткой, массы по взвешиванию пустого автопоезда.</p>
         <h3 class="sub-h">Тягач</h3>
         <div class="fields" id="a_tfields"></div>
+        <h4 class="gap-h">Расстояния между осями тягача</h4>
+        <div class="fields gaps" id="a_tgaps"></div>
         <h3 class="sub-h">Трал</h3>
         <div class="fields" id="a_rfields"></div>
+        <h4 class="gap-h">Расстояния между осями трала</h4>
+        <p class="hint" style="margin:0 0 8px">Меряй рулеткой от центра одного колеса до центра соседнего. Если все одинаковые, впиши одно и то же.</p>
+        <div class="fields gaps" id="a_rgaps"></div>
         <div class="fields" style="margin-top:16px">
           <label class="f full">Название<input class="inp" id="a_trainName" autocomplete="off" placeholder="Например: Volvo + ЧМЗАП, гос. № 123"></label>
         </div>
@@ -693,8 +720,10 @@ small.fh{display:block;font-size:12.5px;color:var(--muted);opacity:.85;font-weig
       <div class="scheme" id="a_svg"></div>
       <div class="route-legend"><span><i style="background:var(--good)"></i>до 90% нормы</span><span><i style="background:var(--warn)"></i>90–100%</span><span><i style="background:var(--bad)"></i>перегруз</span></div>
     </div>
-    <div class="card axlist" id="a_table"></div>
-    <p class="hint" id="a_normNote" style="margin:0 4px"></p>
+    <div class="ax-norm-block">
+      <div class="card axlist" id="a_table"></div>
+      <p class="hint" id="a_normNote" style="margin:10px 4px 0"></p>
+    </div>
 
     <div class="card">
       <div class="card-h"><h2>Грузы на площадке</h2><button class="btn small" type="button" id="a_add">+ Ещё груз</button></div>
@@ -833,6 +862,12 @@ small.fh{display:block;font-size:12.5px;color:var(--muted);opacity:.85;font-weig
 
 
 
+<div class="sheet" id="reSheet" hidden><div class="sheet-in" role="dialog" aria-modal="true" aria-labelledby="reTitle">
+  <div class="sheet-h"><b id="reTitle">Порядок панелей</b><button class="btn small primary" type="button" id="reDone">Готово</button></div>
+  <p class="hint" style="margin:6px 0 0">Двигай стрелками. Порядок запомнится для этой вкладки.</p>
+  <ol id="reList"></ol>
+  <button class="btn small ghost" type="button" id="reReset">Вернуть как было</button>
+</div></div>
 <div class="toast" id="toast" hidden></div>
 
 <script>
@@ -1777,10 +1812,8 @@ const T_FIELDS = [
   ["frontMass","Пустой тягач на переднюю ось","т","С полным баком, по взвешиванию"],
   ["rearMass","Пустой тягач на заднюю тележку","т",""],
   ["frontAxles","Передних осей","шт",""],
-  ["fsp","Между передними осями","м","Только если их две"],
   ["A","От первой передней до первой задней оси","м","Колёсная база из ПТС"],
   ["rearAxles","Задних осей","шт",""],
-  ["rsp","Между задними осями","м",""],
   ["s","Седло впереди центра задней тележки","м","Смещение ССУ, обычно 0,3–0,7 м"],
   ["kingMax","Допустимо на седло","т","Из паспорта ССУ"]];
 const R_FIELDS = [
@@ -1791,7 +1824,6 @@ const R_FIELDS = [
   ["deckH","Погрузочная высота","м",""],
   ["a1","Шкворень → первая ось трала","м","Рулеткой по земле"],
   ["n","Осей у трала","шт",""],
-  ["sp","Между осями трала","м","Обычно 1,31–1,36 м"],
   ["lift","Поднято осей (передних)","шт",""],
   ["ext","Раздвижка","м",""],
   ["kingMax","Допустимо на шкворень","т","Из паспорта трала"],
@@ -1835,7 +1867,7 @@ function groupNorm(n, d, dual, wheels, road){
   road = AXN.single[road]? road : "10";
   const di = dual?1:0, tyre = dual?"двускатные":"односкатные";
   if (n<=1){ const v=AXN.single[road][di]; return {group:v, per:v, rule:`одиночная ось, ${tyre}`}; }
-  const b=axBand(d), bt=AX_BANDS[b];
+  const b=axBand(d), bt=AX_BANDS[b]+(d>0?` (в среднем ${String(Math.round(d*100)/100).replace(".",",")} м)`:"");
   if (wheels>=4){ const v=AXN.wide[road][b]; return {group:v*n, per:v, rule:`${n} оси по 4+ колеса, ${bt}: ${String(v).replace(".",",")} т на ось`}; }
   if (n===2){ const v=AXN.tandem[road][b][di]; return {group:v, per:v/2, rule:`тележка 2 оси, ${bt}, ${tyre}: ${String(v).replace(".",",")} т на тележку`}; }
   if (n===3){ const v=AXN.tridem[road][b][di]; return {group:v, per:v/3, rule:`тележка 3 оси, ${bt}, ${tyre}: ${String(v).replace(".",",")} т на тележку`}; }
@@ -1852,18 +1884,25 @@ const meanArr = a => a.reduce((s,v)=>s+v,0)/a.length;
 const meanGap = a => a.length>1? (a[a.length-1]-a[0])/(a.length-1) : 0;
 
 /* tractor axle positions from the first front axle; trailer positions from the kingpin */
+/* individual gaps between neighbouring axles; falls back to one common spacing */
+function axGaps(o,key,count,def){
+  const arr=Array.isArray(o[key+"s"])? o[key+"s"] : [];
+  return Array.from({length:Math.max(0,count)},(_,i)=>{ const v=num(arr[i]); return v>0? v : (num(o[key])||def); });
+}
+const cumPos = (start,gaps) => { const o=[start]; gaps.forEach(g=>o.push(o[o.length-1]+g)); return o; };
 function tractorGeo(t){
   const nf=Math.max(1,Math.min(2,Math.round(t.frontAxles||1))), nr=Math.max(1,Math.min(3,Math.round(t.rearAxles||2)));
-  const front=Array.from({length:nf},(_,i)=>i*(nf>1?num(t.fsp)||1.8:0));
-  const rear=Array.from({length:nr},(_,i)=>num(t.A)+i*(nr>1?num(t.rsp)||1.4:0));
+  const front=cumPos(0, axGaps(t,"fsp",nf-1,1.8));
+  const rear=cumPos(num(t.A), axGaps(t,"rsp",nr-1,1.4));
   const xf=meanArr(front), xr=meanArr(rear), xk=xr-num(t.s);
   return {front, rear, xf, xr, xk, W:Math.max(0.5,xr-xf)};
 }
 function trailerGeo(r){
   const n=Math.max(1,Math.round(r.n||1)), lift=Math.min(n-1,Math.max(0,Math.round(r.lift||0))), ext=Math.max(0,num(r.ext));
-  const all=Array.from({length:n},(_,i)=>num(r.a1)+ext+i*num(r.sp));
+  const all0=cumPos(num(r.a1), axGaps(r,"sp",n-1,1.36));
+  const all=all0.map(x=>x+ext);
   const down=all.slice(lift);
-  const L0=num(r.a1)+(n-1)*num(r.sp)/2;                       // centre of all axles, not extended
+  const L0=meanArr(all0);                                      // centre of all axles, not extended
   const mass=Math.max(0.1,num(r.mass)), king0=Math.min(mass,Math.max(0,num(r.king0)));
   const cg=(mass-king0)*L0/mass + ext*0.5;                     // empty trailer centre of gravity from the kingpin
   return {n, lift, ext, all, down, Lc:meanArr(down), cg, platLen:num(r.plat)+ext, deckStart:num(r.goose)};
@@ -1918,11 +1957,23 @@ function renderAxForm(){
   $("a_rfields").innerHTML = axFieldsHTML(R_FIELDS,AX.r,"r")
     + `<label class="f">Колёс на оси<select class="inp" data-axs="r.wheels"><option value="2" ${num(AX.r.wheels)<4?"selected":""}>2 (обычный трал)</option><option value="4" ${num(AX.r.wheels)>=4?"selected":""}>4 и больше (модульный)</option></select></label>`
     + `<label class="f">Шины на колесе<select class="inp" data-axs="r.dual"><option value="1" ${AX.r.dual?"selected":""}>двускатные</option><option value="0" ${!AX.r.dual?"selected":""}>односкатные</option></select></label>`;
+  renderGaps();
   $("a_road").innerHTML = Object.entries(ROADS).map(([k,v])=>`<option value="${k}" ${String(AX.road)===k?"selected":""}>${v}</option>`).join("");
   $("a_custom").checked = !!(AX.custom&&AX.custom.on);
   $("a_cfields").hidden = !$("a_custom").checked;
   $("a_cfields").innerHTML = axFieldsHTML([["front","Перед тягача","т/ось",""],["rear","Зад тягача","т/ось",""],["trailer","Оси трала","т/ось",""],["gross","Полная масса","т",""]],AX.custom,"custom");
   renderTrainPick(); renderCargoForm();
+}
+/* distance between every pair of neighbouring axles */
+function gapInputs(grp,key,count,def,prefix){
+  const o=AX[grp], vals=axGaps(o,key,count,def);
+  return vals.map((v,i)=>`<label class="f">${prefix}${i+1}–${i+2}<div class="unit"><input class="inp num" data-gap="${grp}.${key}.${i}" inputmode="decimal" value="${esc(Math.round(v*1000)/1000)}"><span>м</span></div></label>`).join("");
+}
+function renderGaps(){
+  const nf=Math.max(1,Math.min(2,Math.round(num(AX.t.frontAxles)||1))), nr=Math.max(1,Math.min(3,Math.round(num(AX.t.rearAxles)||2))), n=Math.max(1,Math.round(num(AX.r.n)||1));
+  const th = (nf>1? gapInputs("t","fsp",nf-1,1.8,"Перед ") : "") + (nr>1? gapInputs("t","rsp",nr-1,1.4,"Зад ") : "");
+  $("a_tgaps").innerHTML = th || `<p class="hint" style="margin:0;grid-column:1/-1">Одна передняя и одна задняя ось, расстояние задаёт колёсная база.</p>`;
+  $("a_rgaps").innerHTML = n>1? gapInputs("r","sp",n-1,1.36,"Оси ") : `<p class="hint" style="margin:0;grid-column:1/-1">У трала одна ось.</p>`;
 }
 function renderCargoForm(){
   const platLen = num(AX.r.plat) + Math.max(0,num(AX.r.ext));
@@ -2078,9 +2129,17 @@ $("tab-axles").addEventListener("change",e=>{
 });
 $("tab-axles").addEventListener("input",e=>{
   const el=e.target;
+  if (el.dataset.gap){
+    const [grp,key,i]=el.dataset.gap.split("."), o=AX[grp];
+    const cnt = grp==="r"? Math.round(num(o.n))-1 : key==="fsp"? Math.round(num(o.frontAxles))-1 : Math.round(num(o.rearAxles))-1;
+    o[key+"s"]=axGaps(o,key,cnt, key==="fsp"?1.8:key==="rsp"?1.4:1.36); o[key+"s"][+i]=num(el.value);
+    if (grp==="t") { AX.tp="custom"; $("a_tpreset").value="custom"; } else { AX.rp="custom"; $("a_rpreset").value="custom"; }
+    axChanged(false); return;
+  }
   if (el.dataset.ax){
     const [grp,k]=el.dataset.ax.split(".");
     AX[grp][k]=num(el.value);
+    if (["frontAxles","rearAxles","n"].includes(k)) renderGaps();
     if (grp==="t") { AX.tp="custom"; $("a_tpreset").value="custom"; }
     if (grp==="r") { AX.rp="custom"; $("a_rpreset").value="custom"; }
     axChanged(grp==="r"&&(k==="plat"||k==="ext"));
@@ -2591,6 +2650,7 @@ function switchTab(name){
   const navName = (name==="tools"||name==="settings")? "more" : name;
   $("appTitle").textContent=TITLES[name];
   $("fabNew").hidden = name!=="trip";
+  $("reorderBtn").hidden = !["trip","compare","axles","permit","tools"].includes(name);
   $("appBack").hidden = navName!=="more" || name==="more";
   document.querySelectorAll(".tabbar [data-nav]").forEach(b=>{ const on=b.dataset.nav===navName; b.classList.toggle("on",on); if(on) b.setAttribute("aria-current","page"); else b.removeAttribute("aria-current"); });
   document.querySelectorAll(".tab").forEach(t=>t.setAttribute("aria-selected",String(t.dataset.tab===name)));
@@ -2608,9 +2668,64 @@ $("routeMode").addEventListener("click",e=>{
   S.routeMode=b.dataset.v; saveSettings(); refreshAll(true); renderPermit();
   toast(b.dataset.v==="truck"?"Считаю по грузовым дорогам":"Считаю по легковым дорогам");
 });
+/* ---------- order of panels, per tab ---------- */
+const RE_TABS=["trip","compare","axles","permit","tools"];
+let LAYOUT=lsGet("tr_layout")||{}, reTab=null;
+function panelBox(tab){ const sec=$("tab-"+tab); if(!sec) return null; return tab==="tools"? sec.querySelector(".tools") : sec.querySelector(".stack"); }
+const PANEL_NAMES={verdict:"Вердикт и ставка", kpis:"Цифры рейса", a_verdict:"Схема погрузки", p_verdict:"Итог проверки", simCard:"Похожие рейсы"};
+function panelTitle(el){
+  if(PANEL_NAMES[el.id]) return PANEL_NAMES[el.id];
+  if(el.classList.contains("ax-norm-block")) return "Нагрузки по осям";
+  if(el.classList.contains("saved-block")) return "Сохранённые рейсы";
+  if(el.tagName==="DETAILS"){ const sm=el.querySelector(":scope > summary"); if(sm) return sm.firstChild? sm.firstChild.textContent.trim() : sm.textContent.trim(); }
+  if(el.querySelector("#b_on")) return "Обратка";
+  const h=el.querySelector("h2"); return h? h.textContent.trim() : "Панель";
+}
+const panelItems = tab => [...panelBox(tab).children].filter(e=>e.dataset.pid);
+function applyOrder(tab){
+  const box=panelBox(tab), saved=LAYOUT[tab]; if(!box||!Array.isArray(saved)) return;
+  const items=panelItems(tab), byId=new Map(items.map(e=>[e.dataset.pid,e]));
+  saved.forEach(pid=>{ const el=byId.get(pid); if(el){ box.appendChild(el); byId.delete(pid); } });
+  byId.forEach(el=>box.appendChild(el));
+}
+function initLayout(){
+  RE_TABS.forEach(tab=>{ const box=panelBox(tab); if(!box) return; [...box.children].forEach((el,i)=>{ if(el.tagName!=="SCRIPT") el.dataset.pid=tab+"-"+i; }); applyOrder(tab); });
+}
+function renderReList(){
+  const items=panelItems(reTab);
+  $("reList").innerHTML = items.map((el,i)=>`<li><span>${esc(panelTitle(el))}</span>
+    <button type="button" class="re-mv" data-mv="-1" data-i="${i}" ${i===0?"disabled":""} aria-label="Выше"><svg viewBox="0 0 24 24" width="20" height="20" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="m6 15 6-6 6 6"/></svg></button>
+    <button type="button" class="re-mv" data-mv="1" data-i="${i}" ${i===items.length-1?"disabled":""} aria-label="Ниже"><svg viewBox="0 0 24 24" width="20" height="20" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="m6 9 6 6 6-6"/></svg></button></li>`).join("");
+}
+function openReorder(){
+  const sec=document.querySelector("[data-panel]:not([hidden])"); if(!sec) return;
+  reTab=sec.dataset.panel; if(!RE_TABS.includes(reTab)) return;
+  $("reTitle").textContent="Порядок: "+(TITLES[reTab]||"");
+  renderReList(); $("reSheet").hidden=false; document.body.classList.add("sheet-open");
+}
+function closeReorder(){ $("reSheet").hidden=true; document.body.classList.remove("sheet-open"); }
+$("reorderBtn").addEventListener("click",openReorder);
+$("reDone").addEventListener("click",closeReorder);
+$("reSheet").addEventListener("click",e=>{ if(e.target.id==="reSheet") closeReorder(); });
+document.addEventListener("keydown",e=>{ if(e.key==="Escape" && !$("reSheet").hidden) closeReorder(); });
+$("reList").addEventListener("click",e=>{
+  const b=e.target.closest("[data-mv]"); if(!b) return;
+  const items=panelItems(reTab), i=+b.dataset.i, j=i+(+b.dataset.mv); if(j<0||j>=items.length) return;
+  const box=panelBox(reTab);
+  if(j<i) box.insertBefore(items[i],items[j]); else box.insertBefore(items[j],items[i]);
+  LAYOUT[reTab]=panelItems(reTab).map(x=>x.dataset.pid); lsSet("tr_layout",LAYOUT);
+  renderReList();
+  const nb=$("reList").querySelectorAll(`[data-i="${j}"][data-mv="${b.dataset.mv}"]`)[0]; if(nb&&!nb.disabled) nb.focus();
+});
+$("reReset").addEventListener("click",()=>{
+  delete LAYOUT[reTab]; lsSet("tr_layout",LAYOUT);
+  const box=panelBox(reTab); panelItems(reTab).sort((a,b)=>+a.dataset.pid.split("-")[1] - +b.dataset.pid.split("-")[1]).forEach(el=>box.appendChild(el));
+  renderReList(); toast("Порядок как был");
+});
+
 /* ---------- boot ---------- */
 ["z_start","m_from","m_to","b_from","b_to","t_from","t_to","o_place"].forEach(id=>attachCombo($(id)));
-pmFill(); enableZoom("map"); enableZoom("pmap"); layoutMinimal();
+pmFill(); enableZoom("map"); enableZoom("pmap"); layoutMinimal(); initLayout();
 fillTripForm(); renderSettings(); refreshAll(true); renderAxForm(); renderAx(); syncDerived(); pmAutoUI();
 window.__tr={calc:()=>axCalc(AX), get T(){return T}, get PM(){return PM}, get AX(){return AX}, get TRAINS(){return TRAINS}, get CARGO(){return CARGO}, get CLIB(){return CLIB}};
 loadSettlements();
