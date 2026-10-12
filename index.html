@@ -428,6 +428,9 @@ details.more summary::before{border-color:var(--muted)}
 [hidden]{display:none!important}
 @media (min-width:700px){.appbar h1{font-size:32px}}
 @media (prefers-reduced-motion:reduce){*,*::before,*::after{transition:none!important;animation:none!important}}
+.route-status{margin:0 0 10px;font-size:14px}
+.route-status.warn{color:var(--warn)}
+#routeMode button{min-height:38px;font-size:14px}
 
 </style>
 
@@ -541,7 +544,10 @@ details.more summary::before{border-color:var(--muted)}
     </div>
 
     <div class="card">
-      <div class="card-h"><h2>Маршрут</h2></div>
+      <div class="card-h" style="flex-wrap:wrap"><h2>Маршрут</h2>
+        <div class="seg" id="routeMode" role="group" aria-label="Как считать дороги"><button type="button" data-v="truck">Грузовой</button><button type="button" data-v="car">Легковой</button></div>
+      </div>
+      <p class="hint route-status" id="routeStatus"></p>
       <p class="paper" id="vPaper"></p>
       <div class="route" id="routeBar"></div>
       <div class="route-legend" id="routeLegend"></div>
@@ -814,7 +820,7 @@ const DEFAULTS = {
   base:"Набережные Челны", roadFactor:1.2, kmPerDay:500, handleDays:1,
   fuelEmpty:35, fuelLoaded:35, diesel:86.77,
   drvEmpty:13, drvNormal:13, drvOver:16.5, drvHeavy:18, drvBoth:20,
-  platonOn:true, platon:3.2, wear:0, perTrip:0, daily:0,
+  routeMode:"truck", platonOn:true, platon:3.2, wear:0, perTrip:0, daily:0,
   taxPct:0, netVat:false, vatRate:22,
   minRate:105, targetRate:130
 };
@@ -902,10 +908,101 @@ function roadRouteP(A,B){
   if (routeCache.size>300) routeCache.clear();
   routeCache.set(key,out); return out;
 }
+/* ---------- online routes: full OpenStreetMap road map ----------
+   truck: Valhalla (FOSSGIS) "truck" costing, a regular 40 t semi;
+   car:   Valhalla "auto", OSRM as a backup.
+   Results are cached on the device; without internet the built-in trunk-road graph is used. */
+const OR_LS="tr_routes", OR_MAX=200;
+let OR={}; try{ OR=JSON.parse(localStorage.getItem(OR_LS)||"{}")||{}; }catch(e){ OR={}; }
+const ORpending=new Map(), ORfail=new Map();
+let ORsaveT=null, ORrefT=null;
+const routeMode=()=> (typeof S!=="undefined" && S.routeMode==="car") ? "car" : "truck";
+const orKey=(A,B,m)=> m+":"+A.lat.toFixed(4)+","+A.lon.toFixed(4)+"|"+B.lat.toFixed(4)+","+B.lon.toFixed(4);
+function decodePoly6(str){
+  let i=0,lat=0,lon=0; const out=[];
+  while(i<str.length){
+    let b,sh=0,r=0; do{ b=str.charCodeAt(i++)-63; r|=(b&31)<<sh; sh+=5; }while(b>=32); lat+=(r&1)?~(r>>1):(r>>1);
+    sh=0; r=0;      do{ b=str.charCodeAt(i++)-63; r|=(b&31)<<sh; sh+=5; }while(b>=32); lon+=(r&1)?~(r>>1):(r>>1);
+    out.push([lon/1e6,lat/1e6]);
+  }
+  return out;
+}
+function thinLL(ll,maxN){
+  if(ll.length<=maxN) return ll;
+  const st=(ll.length-1)/(maxN-1), o=[]; for(let i=0;i<maxN;i++) o.push(ll[Math.round(i*st)]); return o;
+}
+function withTimeout(ms){ try{ return AbortSignal.timeout(ms); }catch(e){ return undefined; } }
+async function fetchValhalla(A,B,costing){
+  const body={locations:[{lat:A.lat,lon:A.lon},{lat:B.lat,lon:B.lon}],costing,directions_options:{units:"kilometers",directions_type:"none"}};
+  if(costing==="truck") body.costing_options={truck:{height:4,width:2.55,length:20,weight:40,axle_load:10}};
+  const r=await fetch("https://valhalla1.openstreetmap.de/route?json="+encodeURIComponent(JSON.stringify(body)),{signal:withTimeout(20000)});
+  if(!r.ok) throw new Error("http "+r.status);
+  const d=await r.json(), t=d&&d.trip;
+  if(!t||t.status!==0||!t.legs||!t.legs[0]) throw new Error("no route");
+  return {km:t.summary.length, ll:decodePoly6(t.legs[0].shape)};
+}
+async function fetchOSRM(A,B){
+  const r=await fetch(`https://router.project-osrm.org/route/v1/driving/${A.lon},${A.lat};${B.lon},${B.lat}?overview=full&geometries=polyline6`,{signal:withTimeout(20000)});
+  if(!r.ok) throw new Error("http "+r.status);
+  const d=await r.json(); if(!d||d.code!=="Ok"||!d.routes||!d.routes[0]) throw new Error("no route");
+  return {km:d.routes[0].distance/1000, ll:decodePoly6(d.routes[0].geometry)};
+}
+function saveOR(){
+  clearTimeout(ORsaveT);
+  ORsaveT=setTimeout(()=>{
+    const ks=Object.keys(OR);
+    if(ks.length>OR_MAX){ ks.sort((a,b)=>(OR[a].ts||0)-(OR[b].ts||0)).slice(0,ks.length-OR_MAX).forEach(k=>delete OR[k]); }
+    try{ localStorage.setItem(OR_LS,JSON.stringify(OR)); }catch(e){}
+  },400);
+}
+function orRefresh(){
+  clearTimeout(ORrefT);
+  ORrefT=setTimeout(()=>{
+    const typingKm = document.activeElement && document.activeElement.closest && document.activeElement.closest("#legs");
+    if(typeof refreshAll==="function") refreshAll(!typingKm);
+    if(typeof renderPermit==="function") renderPermit();
+    routeStatus();
+  },250);
+}
+function onlineRoute(A,B){
+  const m=routeMode(), k=orKey(A,B,m), hit=OR[k];
+  if(hit) return hit;
+  if(!ORpending.has(k) && !((ORfail.get(k)||0)>Date.now()) && navigator.onLine!==false){
+    const job=(async()=>{
+      let res=null, fb=false;
+      try{ res=await fetchValhalla(A,B,m==="truck"?"truck":"auto"); }
+      catch(e){
+        if(m==="truck"){ try{ res=await fetchValhalla(A,B,"auto"); fb=true; }catch(e1){} }
+        if(!res){ try{ res=await fetchOSRM(A,B); fb = m==="truck"; }catch(e2){} }
+      }
+      ORpending.delete(k);
+      if(res && res.km>0){
+        OR[k]={km:Math.round(res.km), pts:thinLL(res.ll,260).map(([lon,lat])=>[+(lon*KX).toFixed(4),+(-lat).toFixed(4)]), ts:Date.now(), online:true, mode:m, fb};
+        saveOR(); orRefresh();
+      } else { ORfail.set(k, Date.now()+10*60000); routeStatus(); }
+    })();
+    ORpending.set(k,job);
+  }
+  return null;
+}
 function roadRoute(a,b){
   const A=findCity(a), B=findCity(b);
-  return (A&&B) ? roadRouteP(A,B) : null;
+  if(!A||!B) return null;
+  return onlineRoute(A,B) || roadRouteP(A,B);
 }
+function routeStatus(){
+  const el=document.getElementById("routeStatus"); if(!el||typeof T==="undefined") return;
+  const legs=buildLegs(T).filter(l=>l.a&&l.b&&norm(l.a)!==norm(l.b)&&!l.manual);
+  const m=routeMode(), mt=m==="truck"?"грузовому":"легковому";
+  if(!legs.length){ el.textContent=""; return; }
+  let on=0, wait=0, fb=0;
+  for(const l of legs){ const A=findCity(l.a), B=findCity(l.b); if(!A||!B) continue; const k=orKey(A,B,m); if(OR[k]){ on++; if(OR[k].fb) fb++; } else if(ORpending.has(k)) wait++; }
+  el.classList.toggle("warn", on<legs.length && !wait);
+  el.textContent = on===legs.length ? (fb? "Км по полной карте дорог. Грузовой сервер не ответил, часть участков посчитана как для легковой." : `Км по полной карте дорог, по ${mt} маршруту.`)
+    : wait ? "Уточняю километраж по полной карте дорог…"
+    : "Нет связи с картой: км по основным трассам, примерно. Пересчитаю, когда появится интернет.";
+}
+window.addEventListener("online",()=>{ ORfail.clear(); orRefresh(); });
 
 /* ---------- distance ---------- */
 const kmKey = (a,b) => norm(a)+"|"+norm(b);
@@ -918,11 +1015,11 @@ function autoKm(a,b){
 }
 function kmSource(a,b){
   if (norm(a)===norm(b)) return "road";
-  if (roadRoute(a,b)) return "road";
+  const rr=roadRoute(a,b); if (rr) return rr.online? "online" : "road";
   return (findCity(a)&&findCity(b)) ? "est" : null;
 }
 function yandexLink(points){
-  return "https://yandex.ru/maps/?rtt=auto&rtext="+points.map(p=>encodeURIComponent(p)).join("~");
+  return "https://yandex.ru/maps/?rtt="+(routeMode()==="truck"?"truck":"auto")+"&rtext="+points.map(p=>encodeURIComponent(p)).join("~");
 }
 function legKm(a,b,trip){
   const o = trip.km && trip.km[kmKey(a,b)];
@@ -1139,7 +1236,7 @@ function renderLegs(){
     const lbl = l.kind==="loaded" ? (l.load==="main"?"Груз":"Обратка")+" · "+TYPES[l.type] : (l.start?"Порожний подгон к загрузке":"Порожний переезд к обратке");
     const unknown = auto==null && norm(l.a)!==norm(l.b);
     const src = kmSource(l.a,l.b);
-    const srcTxt = l.manual? " · твои км" : src==="road"? " · по дорогам" : src==="est"? ' · <span class="warnline">примерно, по прямой</span>' : "";
+    const srcTxt = l.manual? " · твои км" : src==="online"? (routeMode()==="car"?" · по карте, легковой":(roadRoute(l.a,l.b)||{}).fb?" · по карте, легковой (грузовой не ответил)":" · по карте, грузовой") : src==="road"? " · по основным трассам, примерно" : src==="est"? ' · <span class="warnline">примерно, по прямой</span>' : "";
     return `<div class="leg">
       <span class="dot ${l.kind}"></span>
       <div class="leg-name">${esc(shortName(l.a)||"?")} → ${esc(shortName(l.b)||"?")}<small>${lbl}${unknown?' · <span class="warnline">города нет в списке, впиши км</span>':srcTxt}</small></div>
@@ -1197,6 +1294,7 @@ function tweenRate(el,val){
   el._raf=requestAnimationFrame(step);
 }
 let LAST_V=null;
+function setRouteModeUI(){ document.querySelectorAll("#routeMode button").forEach(b=>b.setAttribute("aria-pressed",String(b.dataset.v===routeMode()))); }
 function renderResults(){
   const c = calc(T), v = verdictOf(c.real);
   const box=$("verdict"); box.className="verdict v-"+v;
@@ -1235,7 +1333,7 @@ function renderResults(){
     + `<span class="tot">Итого</span><span class="tot r m">${fmt(c.costKm)} ₽/км</span><span class="tot r">${rub(c.costs)}</span>`;
   $("costKm").textContent = c.revenue? `${Math.round(c.costs/c.revenue*100)}% выручки` : "";
 
-  renderMap(c);
+  renderMap(c); setRouteModeUI(); routeStatus();
   $("tips").innerHTML = buildTips(c,v).map(t=>`<li class="t-${t[0]}">${t[1]}</li>`).join("");
   $("chipMin").textContent=S.minRate; if(typeof renderHome==="function"&&$("homeLast")) setTimeout(renderHome,0); $("chipTarget").textContent=S.targetRate;
 }
@@ -2213,6 +2311,11 @@ function switchTab(name){
 }
 document.querySelectorAll(".tab").forEach(t=>t.addEventListener("click",()=>switchTab(t.dataset.tab)));
 
+$("routeMode").addEventListener("click",e=>{
+  const b=e.target.closest("button"); if(!b||b.dataset.v===routeMode()) return;
+  S.routeMode=b.dataset.v; saveSettings(); refreshAll(true); renderPermit();
+  toast(b.dataset.v==="truck"?"Считаю по грузовым дорогам":"Считаю по легковым дорогам");
+});
 /* ---------- boot ---------- */
 ["z_start","m_from","m_to","b_from","b_to","t_from","t_to","o_place"].forEach(id=>attachCombo($(id)));
 pmFill(); enableZoom("map"); enableZoom("pmap"); layoutMinimal();
