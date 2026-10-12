@@ -11,7 +11,7 @@
  * Сервер хранит не ключ, а его отпечаток (SHA-256), поэтому по базе ключ не узнать.
  */
 
-const KINDS = new Set(["tasks", "thoughts", "expenses", "sections", "prefs"]);
+const KINDS = new Set(["tasks", "thoughts", "expenses", "sections", "prefs", "loads", "clients"]);
 const ID_RE = /^[A-Za-z0-9_-]{1,64}$/;
 const MAX_DOC = 64 * 1024;
 const CORS = {

@@ -1,0 +1,16 @@
+{
+  "name": "Кентавр CRM",
+  "short_name": "Кентавр",
+  "description": "Заявки на перевозку тралами, заказчики, выручка и отчёты",
+  "lang": "ru",
+  "start_url": "./",
+  "scope": "./",
+  "display": "standalone",
+  "background_color": "#0D1413",
+  "theme_color": "#0D1413",
+  "icons": [
+    {"src": "icons/icon-192.png", "sizes": "192x192", "type": "image/png"},
+    {"src": "icons/icon-512.png", "sizes": "512x512", "type": "image/png"},
+    {"src": "icons/icon-512-maskable.png", "sizes": "512x512", "type": "image/png", "purpose": "maskable"}
+  ]
+}

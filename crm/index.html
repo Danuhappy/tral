@@ -1,0 +1,945 @@
+<!doctype html>
+<html lang="ru">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover">
+<title>Кентавр CRM</title>
+<meta name="theme-color" content="#F2F5F4" media="(prefers-color-scheme: light)">
+<meta name="theme-color" content="#0D1413" media="(prefers-color-scheme: dark)">
+<meta name="apple-mobile-web-app-capable" content="yes">
+<meta name="mobile-web-app-capable" content="yes">
+<meta name="apple-mobile-web-app-title" content="Кентавр">
+<link rel="manifest" href="manifest.webmanifest">
+<link rel="apple-touch-icon" href="icons/apple-touch-icon.png">
+<link rel="icon" type="image/png" sizes="32x32" href="icons/favicon-32.png">
+<script src="../den/config.js"></script>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Onest:wght@400;500;600;700;800&display=swap">
+<style>html{color-scheme:light}body{margin:0}img{max-width:100%}[hidden]{display:none!important}:root{padding-top:env(safe-area-inset-top,0px);padding-bottom:env(safe-area-inset-bottom,0px)}
+/* Layout: dispatcher's console — top bar with tabs on wide screens, bottom tabs on phone; cards on a grid; teal marks money and progress, amber/red only for attention */
+:root{
+  --bg:#F2F5F4; --surface:#FFFFFF; --surface2:#F6F8F7; --sunk:#E8EDEB; --ink:#12201E; --muted:#5B6B68; --faint:#8E9C99; --line:#DCE3E1;
+  --accent:#127C74; --accent-ink:#FFFFFF; --soft:#DCEFEC; --ok:#1E8A55; --warn:#B7790A; --warn-soft:#FBEFD5; --danger:#C2412D; --danger-soft:#FBE3DE;
+  --st1:#B9DDD8; --st2:#8CC7C0; --st3:#5EAFA6; --st4:#35938A; --st5:#1D7870; --st6:#0E5A53;
+  --c1:#2a78d6; --c2:#eb6834; --c3:#1baf7a; --c4:#e87ba4;
+  --font:"Onest", -apple-system, "Segoe UI", Roboto, sans-serif;
+  --r:16px; --h:46px;
+}
+@media (prefers-color-scheme: dark){:root:not([data-theme="light"]){
+  --bg:#0D1413; --surface:#141E1D; --surface2:#182423; --sunk:#1E2B2A; --ink:#E5EEEC; --muted:#93A5A1; --faint:#677874; --line:#233230;
+  --accent:#45B3A8; --accent-ink:#06201D; --soft:#173634; --ok:#4CC08A; --warn:#E3A93B; --warn-soft:#3A2C12; --danger:#F07A66; --danger-soft:#3D1F1A;
+  --st1:#1E4642; --st2:#25605A; --st3:#2D7B73; --st4:#3A978D; --st5:#55B2A8; --st6:#86CCC4;
+  --c1:#3987e5; --c2:#d95926; --c3:#199e70; --c4:#d55181;
+  color-scheme:dark }}
+:root[data-theme="dark"]{
+  --bg:#0D1413; --surface:#141E1D; --surface2:#182423; --sunk:#1E2B2A; --ink:#E5EEEC; --muted:#93A5A1; --faint:#677874; --line:#233230;
+  --accent:#45B3A8; --accent-ink:#06201D; --soft:#173634; --ok:#4CC08A; --warn:#E3A93B; --warn-soft:#3A2C12; --danger:#F07A66; --danger-soft:#3D1F1A;
+  --st1:#1E4642; --st2:#25605A; --st3:#2D7B73; --st4:#3A978D; --st5:#55B2A8; --st6:#86CCC4;
+  --c1:#3987e5; --c2:#d95926; --c3:#199e70; --c4:#d55181;
+  color-scheme:dark }
+
+*,*::before,*::after{box-sizing:border-box}
+html,body{min-height:100%}
+body{background:var(--bg);color:var(--ink);font-family:var(--font);font-size:15px;line-height:1.45;-webkit-font-smoothing:antialiased;-webkit-tap-highlight-color:transparent}
+button,input,select,textarea{font:inherit;color:inherit;margin:0}
+button{cursor:pointer}
+:focus-visible{outline:2px solid var(--accent);outline-offset:2px}
+.num{font-variant-numeric:tabular-nums}
+
+/* top bar */
+.top{position:sticky;top:env(safe-area-inset-top,0px);z-index:20;background:color-mix(in srgb,var(--bg) 88%,transparent);backdrop-filter:blur(10px);-webkit-backdrop-filter:blur(10px);border-bottom:1px solid var(--line)}
+.top .in{max-width:1240px;margin:0 auto;padding-inline:16px;height:56px;display:flex;align-items:center;gap:14px}
+.logo{display:flex;align-items:center;gap:9px;font-weight:800;font-size:16px;letter-spacing:-.01em;white-space:nowrap}
+.logo i{width:28px;height:28px;border-radius:8px;background:var(--accent);display:grid;place-items:center;color:var(--accent-ink);font-style:normal;font-size:14px;font-weight:800}
+.nav{display:none;gap:4px;margin-left:8px}
+.nav button{border:1px solid transparent;background:none;border-radius:10px;padding:7px 12px;font-weight:600;font-size:14px;color:var(--muted);display:flex;gap:7px;align-items:center}
+.nav button svg{width:16px;height:16px}
+.nav button[aria-current="page"]{background:var(--surface);border-color:var(--line);color:var(--ink)}
+.nav .cnt{font-size:11px;font-weight:700;background:var(--soft);color:var(--accent);border-radius:6px;padding:0 6px}
+.top .sp{flex:1}
+.ibtn{border:1px solid var(--line);background:var(--surface);border-radius:10px;width:38px;height:38px;display:grid;place-items:center;padding:0;color:var(--ink);flex:none}
+.ibtn svg{width:18px;height:18px}
+.addbtn{border:0;background:var(--accent);color:var(--accent-ink);border-radius:10px;height:38px;padding:0 14px;font-weight:700;display:flex;align-items:center;gap:6px;white-space:nowrap}
+.addbtn svg{width:16px;height:16px}
+
+.wrap{max-width:1240px;margin:0 auto;padding-inline:16px;padding-block:18px calc(96px + env(safe-area-inset-bottom,0px))}
+.eyebrow{font-size:12px;letter-spacing:.08em;text-transform:uppercase;color:var(--accent);font-weight:700}
+h1{font-size:26px;line-height:1.15;margin:4px 0 2px;font-weight:800;letter-spacing:-.02em;text-wrap:balance}
+.lead{color:var(--muted);margin:0}
+.vhead{display:flex;justify-content:space-between;align-items:flex-end;gap:12px;flex-wrap:wrap;margin-bottom:16px}
+
+/* cards */
+.grid{display:grid;gap:12px;grid-template-columns:1fr}
+.card{background:var(--surface);border:1px solid var(--line);border-radius:var(--r);padding:16px;min-width:0}
+.card.hero{background:linear-gradient(135deg,color-mix(in srgb,var(--accent) 22%,var(--surface)) 0%,var(--surface) 70%)}
+.ct{display:flex;justify-content:space-between;align-items:center;gap:8px;margin-bottom:10px}
+.ct h3{margin:0;font-size:14px;font-weight:700}
+.ct .link{background:none;border:0;color:var(--accent);font-weight:600;font-size:13px;padding:0}
+.sub{color:var(--muted);font-size:13px}
+.big{font-size:34px;font-weight:800;letter-spacing:-.02em;line-height:1.1;font-variant-numeric:tabular-nums}
+.delta{font-size:13px;font-weight:700}
+.delta.up{color:var(--ok)}.delta.down{color:var(--danger)}
+.prog{height:8px;background:var(--sunk);border-radius:99px;overflow:hidden;margin:14px 0 6px}
+.prog i{display:block;height:100%;background:var(--accent);border-radius:99px}
+.minis{display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:8px;margin-top:14px}
+.mini{background:var(--surface2);border:1px solid var(--line);border-radius:12px;padding:9px 10px;min-width:0}
+.mini span{display:block;font-size:12px;color:var(--muted);white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.mini b{font-size:17px;font-variant-numeric:tabular-nums;white-space:nowrap}
+.stack{display:flex;height:12px;border-radius:99px;overflow:hidden;gap:2px;margin:12px 0}
+.stack i{display:block;min-width:4px}
+.legend{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:6px 14px;font-size:13px}
+.legend div{display:flex;align-items:center;gap:7px;min-width:0}
+.legend i{width:9px;height:9px;border-radius:3px;flex:none}
+.legend span{flex:1;min-width:0;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;color:var(--muted)}
+.legend b{font-variant-numeric:tabular-nums;font-weight:600}
+
+/* week bars */
+.wbars{display:flex;align-items:flex-end;gap:8px;height:130px;margin-top:8px}
+.wbars .wb{flex:1;display:flex;flex-direction:column;align-items:center;gap:6px;height:100%;justify-content:flex-end;min-width:0;background:none;border:0;padding:0;color:inherit}
+.wbars .bar{width:100%;max-width:38px;background:var(--st3);border-radius:6px 6px 2px 2px;min-height:3px;position:relative}
+.wbars .wb.today .bar{background:var(--accent)}
+.wbars .wb.future .bar{background:repeating-linear-gradient(135deg,var(--sunk) 0 4px,transparent 4px 8px);border:1px dashed var(--line)}
+.wbars .lbl{font-size:12px;color:var(--muted)}
+.wbars .wb.today .lbl{color:var(--ink);font-weight:800}
+.wbars .tip{position:absolute;bottom:calc(100% + 6px);left:50%;transform:translateX(-50%);background:var(--ink);color:var(--bg);font-size:11px;font-weight:700;border-radius:6px;padding:2px 6px;white-space:nowrap}
+
+/* lists */
+.rows{display:grid;gap:6px;list-style:none;margin:0;padding:0}
+.row{display:flex;gap:11px;align-items:center;background:var(--surface2);border:1px solid var(--line);border-radius:12px;padding:9px 11px;min-width:0;text-align:left;width:100%;color:inherit}
+button.row{cursor:pointer}
+.av{width:30px;height:30px;border-radius:8px;display:grid;place-items:center;font-weight:800;font-size:13px;flex:none;background:var(--soft);color:var(--accent)}
+.row .t{flex:1;min-width:0}
+.row .t b{display:block;font-weight:600;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+.row .t span{display:block;font-size:12.5px;color:var(--muted);overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+.row .v{text-align:right;font-variant-numeric:tabular-nums;font-weight:700;white-space:nowrap}
+.row .v small{display:block;font-weight:500;font-size:12px;color:var(--muted)}
+.pill{display:inline-flex;align-items:center;gap:4px;font-size:11.5px;font-weight:700;border-radius:99px;padding:2px 8px;background:var(--sunk);color:var(--muted);white-space:nowrap}
+.pill.ok{background:color-mix(in srgb,var(--ok) 16%,transparent);color:var(--ok)}
+.pill.warn{background:var(--warn-soft);color:var(--warn)}
+.pill.bad{background:var(--danger-soft);color:var(--danger)}
+.pill.acc{background:var(--soft);color:var(--accent)}
+.att{border-left:3px solid var(--warn)}
+.att.bad{border-left-color:var(--danger)}
+.trucks{display:grid;grid-template-columns:repeat(5,minmax(0,1fr));gap:6px}
+.truck{border:1px solid var(--line);background:var(--surface2);border-radius:10px;padding:7px 6px;text-align:center;min-width:0}
+.truck b{display:block;font-size:13px}
+.truck span{display:block;font-size:11px;color:var(--muted);white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.truck.go{background:var(--soft);border-color:color-mix(in srgb,var(--accent) 40%,var(--line))}
+.truck.go span{color:var(--accent);font-weight:700}
+.truck.wait span{color:var(--warn);font-weight:700}
+.next{display:grid;gap:8px}
+.next .when{font-size:12px;color:var(--accent);font-weight:700;text-transform:uppercase;letter-spacing:.05em}
+.next b{font-size:17px}
+
+/* pipeline */
+.toolbar{display:flex;gap:8px;align-items:center;flex-wrap:wrap;margin-bottom:12px}
+.chips{display:flex;gap:6px;overflow-x:auto;scrollbar-width:none;max-width:100%}
+.chips::-webkit-scrollbar{display:none}
+.chip{height:34px;border:1px solid var(--line);background:var(--surface);border-radius:99px;padding:0 13px;font-size:13px;font-weight:600;white-space:nowrap;color:var(--muted)}
+.chip[aria-pressed="true"]{background:var(--ink);color:var(--bg);border-color:var(--ink)}
+.search{position:relative;flex:1 1 200px;min-width:0;max-width:340px}
+.search input{width:100%;height:38px;border:1px solid var(--line);background:var(--surface);border-radius:10px;padding:0 12px 0 34px;font-size:16px}
+.search svg{position:absolute;left:11px;top:50%;transform:translateY(-50%);width:16px;height:16px;color:var(--faint)}
+.board{display:flex;gap:10px;overflow-x:auto;padding-bottom:10px;margin-inline:-16px;padding-inline:16px;scroll-snap-type:x proximity;align-items:flex-start;overscroll-behavior-x:contain}
+.col{flex:0 0 min(78vw,272px);scroll-snap-align:start;background:var(--surface2);border:1px solid var(--line);border-radius:var(--r);padding:10px;display:flex;flex-direction:column;gap:8px;min-height:140px;transition:border-color .12s,background .12s}
+.col.over{border-color:var(--accent);background:var(--soft)}
+.colh{display:flex;justify-content:space-between;align-items:center;gap:8px;padding:2px 2px 0}
+.colh b{display:flex;gap:7px;align-items:center;font-size:14px}
+.colh b i{width:8px;height:8px;border-radius:50%}
+.colh .n{font-size:12px;font-weight:700;color:var(--muted);background:var(--sunk);border-radius:6px;padding:0 6px}
+.colsum{font-size:12.5px;color:var(--muted);padding:0 2px;font-variant-numeric:tabular-nums}
+.colbar{height:3px;border-radius:99px;margin:0 2px 2px}
+.lcard{background:var(--surface);border:1px solid var(--line);border-radius:12px;padding:10px 11px;display:grid;gap:6px;cursor:grab;user-select:none;-webkit-user-select:none;-webkit-touch-callout:none;touch-action:pan-x pan-y;text-align:left;width:100%;color:inherit}
+.lcard .cl{font-size:12px;color:var(--muted);display:flex;gap:6px;align-items:center;min-width:0}
+.lcard .cl span{overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+.lcard .rt{font-weight:700;line-height:1.3;overflow-wrap:anywhere}
+.lcard .mn{display:flex;justify-content:space-between;align-items:baseline;gap:6px}
+.lcard .mn b{font-size:18px;font-variant-numeric:tabular-nums}
+.lcard .ft{display:flex;gap:6px;flex-wrap:wrap;align-items:center}
+.lcard.dragging{opacity:.35}
+.dragghost{position:fixed;z-index:60;pointer-events:none;width:250px;transform:rotate(2deg);box-shadow:0 18px 40px rgba(0,0,0,.28);cursor:grabbing}
+.drop{border:1.5px dashed var(--line);border-radius:12px;padding:16px;text-align:center;font-size:12.5px;color:var(--faint)}
+.rpk{font-size:12px;font-weight:800;border-radius:6px;padding:1px 6px;font-variant-numeric:tabular-nums}
+.rpk.g{background:color-mix(in srgb,var(--ok) 16%,transparent);color:var(--ok)}
+.rpk.m{background:var(--sunk);color:var(--muted)}
+.rpk.b{background:var(--danger-soft);color:var(--danger)}
+
+/* clients table */
+.tbl{display:grid;gap:6px}
+.crow{display:grid;grid-template-columns:auto minmax(0,1fr) auto;gap:4px 11px;align-items:center;background:var(--surface);border:1px solid var(--line);border-radius:12px;padding:10px 12px;text-align:left;width:100%;color:inherit}
+.crow .nm b{display:block;font-weight:700;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+.crow .nm span{display:block;font-size:12.5px;color:var(--muted);overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+.crow .rt{text-align:right;font-variant-numeric:tabular-nums}
+.crow .rt b{display:block}
+.crow .rt span{font-size:12px;color:var(--muted)}
+
+/* reports */
+.kpis{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:10px}
+.kpi{background:var(--surface);border:1px solid var(--line);border-radius:var(--r);padding:12px 14px;min-width:0}
+.kpi span{font-size:12.5px;color:var(--muted)}
+.kpi b{display:block;font-size:24px;font-weight:800;letter-spacing:-.02em;font-variant-numeric:tabular-nums;margin:2px 0}
+.chart{position:relative;width:100%}
+.chart svg{display:block;width:100%;overflow:visible}
+.ctip{position:absolute;top:0;background:var(--ink);color:var(--bg);border-radius:8px;padding:6px 9px;font-size:12px;pointer-events:none;white-space:nowrap;transform:translateX(-50%)}
+.ctip b{font-variant-numeric:tabular-nums}
+.key{display:flex;gap:14px;font-size:12px;color:var(--muted)}
+.key span{display:flex;gap:6px;align-items:center}
+.key i{width:16px;height:0;border-top:2px solid var(--accent)}
+.key i.d{border-top:2px dashed var(--faint)}
+.funnel{display:grid;gap:9px}
+.fn{display:grid;grid-template-columns:96px minmax(0,1fr);gap:10px;align-items:center;font-size:13px}
+.fn small{display:block;color:var(--muted);font-size:11.5px}
+.fn .tr{height:22px;background:var(--sunk);border-radius:6px;overflow:hidden}
+.fn .tr i{display:block;height:100%;border-radius:6px;background:var(--st4)}
+.donut{display:flex;gap:16px;align-items:center;flex-wrap:wrap}
+.donut svg{width:140px;height:140px;flex:none}
+.lb{display:grid;gap:10px}
+.lb .it{display:grid;grid-template-columns:22px 30px minmax(0,1fr) auto;gap:10px;align-items:center}
+.lb .it .pos{color:var(--faint);font-weight:700;text-align:center}
+.lb .it .nm b{display:block;font-weight:600;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+.lb .it .nm span{font-size:12px;color:var(--muted)}
+.lb .it .tr{grid-column:3/-1;height:4px;background:var(--sunk);border-radius:99px;overflow:hidden;margin-top:-4px}
+.lb .it .tr i{display:block;height:100%;background:var(--accent)}
+.seg{display:inline-flex;background:var(--sunk);border-radius:10px;padding:3px;gap:2px}
+.seg button{height:30px;border:0;background:transparent;padding:0 12px;border-radius:8px;font-weight:700;font-size:13px;color:var(--muted)}
+.seg button[aria-pressed="true"]{background:var(--surface);color:var(--ink);box-shadow:0 1px 3px rgba(0,0,0,.12)}
+
+/* sheet */
+.scrim{position:fixed;inset:0;background:rgba(5,12,11,.45);z-index:40;opacity:0;transition:opacity .2s}
+.scrim.on{opacity:1}
+.sheet{position:fixed;left:0;right:0;bottom:0;z-index:41;background:var(--surface);border-radius:20px 20px 0 0;max-height:92vh;overflow-y:auto;overscroll-behavior:contain;padding:8px 16px calc(20px + env(safe-area-inset-bottom,0px));transform:translateY(100%);transition:transform .25s ease}
+.sheet.on{transform:none}
+.grab{width:40px;height:5px;border-radius:99px;background:var(--line);margin:4px auto 10px}
+.sh{display:flex;justify-content:space-between;align-items:flex-start;gap:10px;margin-bottom:12px}
+.sh h2{margin:0;font-size:20px;font-weight:800;letter-spacing:-.01em;overflow-wrap:anywhere}
+.form{display:grid;gap:10px}
+.f2{display:grid;grid-template-columns:1fr 1fr;gap:8px}
+.fl{display:grid;gap:4px;min-width:0}
+.fl>span{font-size:12px;font-weight:700;color:var(--muted)}
+.field{width:100%;min-width:0;height:var(--h);border:1px solid var(--line);background:var(--surface2);border-radius:11px;padding:0 12px;font-size:16px;-webkit-appearance:none;appearance:none}
+textarea.field{height:auto;min-height:70px;padding:10px 12px;resize:vertical}
+select.field{background-image:linear-gradient(45deg,transparent 50%,var(--muted) 50%),linear-gradient(135deg,var(--muted) 50%,transparent 50%);background-position:calc(100% - 17px) 20px,calc(100% - 12px) 20px;background-size:5px 5px;background-repeat:no-repeat;padding-right:30px}
+input[type="date"].field{display:flex;align-items:center}
+.field::-webkit-date-and-time-value{text-align:left}
+.field:focus{outline:none;border-color:var(--accent);background:var(--surface)}
+.verdict{border-radius:12px;padding:10px 12px;display:flex;justify-content:space-between;align-items:center;gap:10px;font-size:14px}
+.verdict b{font-size:20px;font-variant-numeric:tabular-nums}
+.verdict.g{background:color-mix(in srgb,var(--ok) 14%,transparent);color:var(--ok)}
+.verdict.m{background:var(--sunk);color:var(--muted)}
+.verdict.b{background:var(--danger-soft);color:var(--danger)}
+.stages{display:flex;gap:5px;overflow-x:auto;scrollbar-width:none}
+.stages button{flex:none;height:34px;border:1px solid var(--line);background:var(--surface2);border-radius:9px;padding:0 10px;font-size:13px;font-weight:600;color:var(--muted)}
+.stages button[aria-pressed="true"]{background:var(--accent);color:var(--accent-ink);border-color:var(--accent)}
+.btn{height:var(--h);border:0;border-radius:11px;padding:0 16px;font-weight:700;background:var(--accent);color:var(--accent-ink);display:inline-flex;align-items:center;justify-content:center;gap:7px;white-space:nowrap;text-decoration:none;font-size:15px}
+.btn svg{width:17px;height:17px}
+.btn.ghost{background:var(--sunk);color:var(--ink)}
+.btn.danger{background:var(--danger-soft);color:var(--danger)}
+.btns{display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:8px}
+.tiles{display:grid;grid-template-columns:1fr 1fr;gap:8px}
+.tile{background:var(--surface2);border:1px solid var(--line);border-radius:12px;padding:10px 12px}
+.tile span{font-size:12px;color:var(--muted)}
+.tile b{display:block;font-size:17px;font-variant-numeric:tabular-nums}
+.sec{font-size:13px;font-weight:800;margin:16px 0 8px}
+.tl{display:grid;gap:12px;list-style:none;margin:0;padding:0 0 0 4px}
+.tl li{display:grid;grid-template-columns:12px minmax(0,1fr) auto;gap:10px;align-items:start}
+.tl li i{width:10px;height:10px;border-radius:50%;border:2px solid var(--accent);margin-top:5px}
+.tl li b{display:block;font-weight:600;overflow-wrap:anywhere}
+.tl li span{font-size:12px;color:var(--muted)}
+.empty{text-align:center;color:var(--muted);padding:26px 14px}
+.empty b{display:block;color:var(--ink);font-size:16px;margin-bottom:4px}
+.empty .btn{margin-top:12px}
+.note{font-size:13px;color:var(--muted);background:var(--sunk);border-radius:12px;padding:10px 12px}
+.keybox{display:flex;justify-content:space-between;align-items:center;gap:10px;flex-wrap:wrap;background:var(--sunk);border-radius:12px;padding:12px 14px;margin:6px 0 8px}
+.keybox b{letter-spacing:.04em;overflow-wrap:anywhere}
+
+/* tab bar */
+.tabbar{position:fixed;left:0;right:0;bottom:0;z-index:20;background:var(--surface);border-top:1px solid var(--line);padding:6px 6px calc(6px + env(safe-area-inset-bottom,0px));display:flex;justify-content:center}
+.tabbar .in{display:flex;width:100%;max-width:560px}
+.tab{flex:1;background:none;border:0;display:flex;flex-direction:column;align-items:center;gap:3px;padding:4px 0;font-size:11.5px;font-weight:600;color:var(--muted);min-width:0}
+.tab svg{width:21px;height:21px}
+.tab .ic{display:grid;place-items:center;width:52px;height:28px;border-radius:99px}
+.tab[aria-current="page"]{color:var(--ink)}
+.tab[aria-current="page"] .ic{background:var(--soft);color:var(--accent)}
+.toast{position:fixed;left:50%;transform:translateX(-50%);bottom:calc(84px + env(safe-area-inset-bottom,0px));background:var(--ink);color:var(--bg);border-radius:12px;padding:10px 14px;display:flex;gap:16px;align-items:center;font-size:14px;font-weight:600;width:max-content;max-width:calc(100% - 32px);z-index:70;box-shadow:0 8px 28px rgba(0,0,0,.25)}
+.toast button{background:none;border:0;color:var(--accent);font-weight:800;padding:0;filter:brightness(1.3)}
+
+@media (min-width:760px){
+  .grid.home{grid-template-columns:repeat(6,minmax(0,1fr))}
+  .home .s3{grid-column:span 3}.home .s2{grid-column:span 2}.home .s4{grid-column:span 4}.home .s6{grid-column:span 6}
+  .kpis{grid-template-columns:repeat(4,minmax(0,1fr))}
+  .grid.rep{grid-template-columns:repeat(3,minmax(0,1fr))}
+  .rep .s2{grid-column:span 2}
+  .crow{grid-template-columns:auto minmax(0,1.4fr) minmax(0,1fr) 110px 120px 110px}
+  .sheet{left:auto;top:0;bottom:0;width:440px;max-height:none;border-radius:20px 0 0 20px;transform:translateX(100%);padding-top:18px}
+  .grab{display:none}
+}
+@media (min-width:1000px){
+  .nav{display:flex}
+  .tabbar{display:none}
+  .wrap{padding-bottom:40px}
+  .toast{bottom:24px}
+  .col{flex:1 0 220px}
+  .home .s2l{grid-column:span 2}
+}
+@media (max-width:759px){
+  .crow .hide-m{display:none}
+  .legend{grid-template-columns:1fr}
+}
+@media (prefers-reduced-motion: reduce){*{transition:none!important}}
+</style>
+</head>
+<body>
+
+<header class="top">
+  <div class="in">
+    <div class="logo"><i>К</i>Кентавр</div>
+    <nav class="nav" id="nav" aria-label="Разделы"></nav>
+    <div class="sp"></div>
+    <button type="button" class="ibtn" id="themeBtn" aria-label="Тема"></button>
+    <button type="button" class="ibtn" id="setBtn" aria-label="Настройки"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M4 7h10M18 7h2M4 17h4M12 17h8"/><circle cx="16" cy="7" r="2"/><circle cx="10" cy="17" r="2"/></svg></button>
+    <button type="button" class="addbtn" id="newLoad"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round"><path d="M12 5v14M5 12h14"/></svg>Заявка</button>
+  </div>
+</header>
+
+<main class="wrap">
+  <section id="v-home"></section>
+  <section id="v-pipe" hidden></section>
+  <section id="v-clients" hidden></section>
+  <section id="v-reports" hidden></section>
+  <section id="v-settings" hidden></section>
+</main>
+
+<nav class="tabbar" aria-label="Разделы"><div class="in" id="tabbar"></div></nav>
+<div class="scrim" id="scrim" hidden></div>
+<aside class="sheet" id="sheet" hidden role="dialog" aria-modal="true"></aside>
+<div class="toast" id="toast" hidden><span id="toastText"></span><button type="button" id="toastBtn" hidden>Вернуть</button></div>
+
+<script>
+(function(){
+"use strict";
+/* =============== helpers =============== */
+const $=s=>document.querySelector(s);
+const pad=n=>String(n).padStart(2,'0');
+const ymd=d=>d.getFullYear()+'-'+pad(d.getMonth()+1)+'-'+pad(d.getDate());
+const parseYmd=s=>{if(!s)return null;const [y,m,d]=s.split('-').map(Number);return new Date(y,m-1,d)};
+const today=()=>{const d=new Date();return new Date(d.getFullYear(),d.getMonth(),d.getDate())};
+const addDays=(d,n)=>new Date(d.getFullYear(),d.getMonth(),d.getDate()+n);
+const daysBetween=(a,b)=>Math.round((b-a)/864e5);
+const newId=()=>Date.now().toString(36)+Math.random().toString(36).slice(2,7);
+const nf=new Intl.NumberFormat('ru-RU',{maximumFractionDigits:0});
+const rub=n=>nf.format(Math.round(n||0))+' ₽';
+const krub=n=>{n=n||0;if(Math.abs(n)>=1e6)return nf.format(+(n/1e6).toFixed(n>=1e7?1:2)).replace('.',',')+' млн ₽';if(Math.abs(n)>=1e3)return nf.format(Math.round(n/1e3))+' тыс ₽';return nf.format(n)+' ₽'};
+const fDay=new Intl.DateTimeFormat('ru-RU',{day:'numeric',month:'short'});
+const fDayW=new Intl.DateTimeFormat('ru-RU',{weekday:'long',day:'numeric',month:'long'});
+const fMonth=new Intl.DateTimeFormat('ru-RU',{month:'long'});
+const fMonY=new Intl.DateTimeFormat('ru-RU',{month:'short'});
+const cap=s=>s?s[0].toUpperCase()+s.slice(1):s;
+function plural(n,f){const a=Math.abs(n)%100,b=a%10;return a>10&&a<20?f[2]:b===1?f[0]:b>=2&&b<=4?f[1]:f[2]}
+function h(tag,attrs,...kids){const e=document.createElement(tag);if(attrs)for(const k in attrs){const v=attrs[k];if(v==null||v===false)continue;if(k==='class')e.className=v;else if(k.startsWith('on'))e.addEventListener(k.slice(2),v);else if(k==='style')e.style.cssText=v;else if(k==='html')e.innerHTML=v;else e.setAttribute(k,v===true?'':v)}for(const c of kids.flat()){if(c==null||c===false)continue;e.append(c.nodeType?c:document.createTextNode(String(c)))}return e}
+function lsGet(k,d){try{const v=localStorage.getItem(k);return v==null?d:JSON.parse(v)}catch(e){return d}}
+function lsSet(k,v){try{localStorage.setItem(k,JSON.stringify(v))}catch(e){}}
+const I={
+ home:'<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="3" width="7" height="9" rx="2"/><rect x="14" y="3" width="7" height="5" rx="2"/><rect x="14" y="12" width="7" height="9" rx="2"/><rect x="3" y="16" width="7" height="5" rx="2"/></svg>',
+ pipe:'<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="4" width="5" height="16" rx="1.5"/><rect x="10" y="4" width="5" height="11" rx="1.5"/><rect x="17" y="4" width="4" height="7" rx="1.5"/></svg>',
+ clients:'<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="9" cy="8" r="3.5"/><path d="M2.5 20c.8-3.5 3.4-5.5 6.5-5.5s5.7 2 6.5 5.5M16 4.5a3.5 3.5 0 0 1 0 7M18 14.8c1.9.7 3 2.5 3.5 5.2"/></svg>',
+ reports:'<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M3 20h18M5 16l4.5-5 3.5 3 6-7"/></svg>',
+ sun:'<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><circle cx="12" cy="12" r="4"/><path d="M12 2v2M12 20v2M4.9 4.9l1.4 1.4M17.7 17.7l1.4 1.4M2 12h2M20 12h2M4.9 19.1l1.4-1.4M17.7 6.3l1.4-1.4"/></svg>',
+ moon:'<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M20 14.5A8 8 0 1 1 9.5 4a6.5 6.5 0 0 0 10.5 10.5z"/></svg>',
+ auto:'<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="8.5"/><path d="M12 3.5v17A8.5 8.5 0 0 0 12 3.5z" fill="currentColor"/></svg>',
+ phone:'<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M5 4h4l2 5-2.5 1.5a11 11 0 0 0 5 5L15 13l5 2v4a2 2 0 0 1-2 2A16 16 0 0 1 3 6a2 2 0 0 1 2-2"/></svg>',
+ msg:'<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M4 5h16v11H8l-4 4z"/></svg>',
+ plus:'<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round"><path d="M12 5v14M5 12h14"/></svg>',
+ x:'<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><path d="M6 6l12 12M18 6L6 18"/></svg>',
+ search:'<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><circle cx="11" cy="11" r="7"/><path d="M20 20l-3.5-3.5"/></svg>'};
+const icon=n=>{const s=document.createElement('span');s.innerHTML=I[n];return s.firstChild};
+
+/* =============== domain =============== */
+const STAGES=[['found','Найден груз'],['talk','Торг'],['ok','Подтверждён'],['road','В пути'],['done','Выгружен'],['paid','Оплачен'],['lost','Сорвался']];
+const ACTIVE=['found','talk','ok','road','done'];
+const stName=id=>(STAGES.find(s=>s[0]===id)||STAGES[0])[1];
+const stIdx=id=>STAGES.findIndex(s=>s[0]===id);
+const stColor=id=>({found:'var(--st1)',talk:'var(--st2)',ok:'var(--st3)',road:'var(--st4)',done:'var(--st5)',paid:'var(--st6)',lost:'var(--faint)'})[id];
+const SOURCES=[['ati','АТИ','var(--c1)'],['regular','Постоянный','var(--c3)'],['call','Звонок','var(--c2)'],['other','Другое','var(--c4)']];
+const DEF_SET={name:'Данил',goal:2500000,minRate:110,targetRate:130,trucks:10,payDays:14};
+const state={loads:[],clients:[],settings:Object.assign({},DEF_SET),ready:false};
+const set=()=>state.settings;
+const perKm=l=>l.km>0&&l.rate>0?l.rate/l.km:0;
+const rateClass=v=>!v?'m':v>=set().targetRate?'g':v>=set().minRate?'m':'b';
+const clientOf=id=>state.clients.find(c=>c.id===id);
+const clientName=l=>(clientOf(l.clientId)||{}).name||'Без заказчика';
+const route=l=>(l.from||'?')+' → '+(l.to||'?');
+const revDate=l=>parseYmd(l.unloadDate)||(l.stageAt?new Date(l.stageAt):null);
+const isRevenue=l=>l.stage==='done'||l.stage==='paid';
+const overdue=l=>l.stage==='done'&&l.payDue&&parseYmd(l.payDue)<today();
+const initials=s=>(s||'?').replace(/^(ООО|ИП|АО|ЗАО|ОАО|ПАО)\s+/i,'').replace(/[«»"]/g,'').trim().slice(0,1).toUpperCase()||'?';
+
+/* =============== storage & sync =============== */
+const API=String(window.MOYDEN_API||'').replace(/\/$/,'');
+const LS='crm_data_v1';
+let cloud=false,key=lsGet('crm_key',''),outbox=lsGet('crm_outbox',{}),lastSync=lsGet('crm_since',0),syncing=false,syncAgain=false,syncTimer=null,syncOk=0,syncErr=null;
+const ALPH='ABCDEFGHJKLMNPQRSTUVWXYZ23456789';
+const normKey=k=>String(k||'').toUpperCase().replace(/[^A-Z0-9]/g,'');
+const fmtKey=k=>normKey(k).replace(/(.{4})(?=.)/g,'$1-');
+function genKey(){const a=crypto.getRandomValues(new Uint8Array(20));let s='';for(const x of a)s+=ALPH[x%32];return fmtKey(s)}
+function saveLocal(){lsSet(LS,{loads:state.loads,clients:state.clients,settings:state.settings})}
+function queue(kind,id,data,deleted){if(!cloud)return;outbox[kind+'/'+id]={kind,id,data:deleted?null:data,deleted:!!deleted,updated:Date.now()};lsSet('crm_outbox',outbox);clearTimeout(syncTimer);syncTimer=setTimeout(sync,400)}
+const strip=o=>{const c=Object.assign({},o);delete c.id;return c};
+function put(kind,row){const list=state[kind];const i=list.findIndex(x=>x.id===row.id);if(i>=0)list[i]=row;else list.push(row);saveLocal();queue(kind,row.id,strip(row));renderAll()}
+function patch(kind,id,p){const r=state[kind].find(x=>x.id===id);if(!r)return;Object.assign(r,p);saveLocal();queue(kind,id,strip(r));renderAll()}
+function del(kind,id){state[kind]=state[kind].filter(x=>x.id!==id);saveLocal();queue(kind,id,null,true);renderAll()}
+function saveSettings(){saveLocal();queue('prefs','crm_settings',state.settings);renderAll()}
+async function sync(){
+  if(!cloud)return;if(syncing){syncAgain=true;return}syncing=true;
+  const sent=Object.assign({},outbox);
+  try{
+    const r=await fetch(API+'/api/sync',{method:'POST',headers:{'Content-Type':'application/json',Authorization:'Bearer '+normKey(key)},body:JSON.stringify({since:lastSync,changes:Object.values(sent)})});
+    if(!r.ok)throw new Error('ошибка сервера '+r.status);
+    const res=await r.json();
+    for(const k in sent)if(outbox[k]&&outbox[k].updated===sent[k].updated)delete outbox[k];
+    lsSet('crm_outbox',outbox);
+    let changed=false;
+    for(const d of res.docs||[]){
+      if(outbox[d.kind+'/'+d.id])continue;
+      if(d.kind==='prefs'){if(d.id==='crm_settings'&&d.data&&JSON.stringify(d.data)!==JSON.stringify(state.settings)){state.settings=Object.assign({},DEF_SET,d.data);changed=true}continue}
+      if(d.kind!=='loads'&&d.kind!=='clients')continue;
+      const list=state[d.kind];const i=list.findIndex(x=>x.id===d.id);
+      if(d.deleted){if(i>=0){list.splice(i,1);changed=true}}
+      else{const row=Object.assign({id:d.id},d.data);if(i<0||JSON.stringify(list[i])!==JSON.stringify(row)){if(i>=0)list[i]=row;else list.push(row);changed=true}}
+    }
+    lastSync=res.now;lsSet('crm_since',lastSync);if(changed){saveLocal();renderAll()}
+    syncOk=Date.now();syncErr=null;
+  }catch(e){syncErr=(e&&e.message)||'нет связи'}
+  syncing=false;if(view==='settings')renderSettings();
+  if(syncAgain||(Object.keys(outbox).length&&!syncErr)){syncAgain=false;clearTimeout(syncTimer);syncTimer=setTimeout(sync,1500)}
+}
+function queueAll(){for(const k of ['loads','clients'])for(const r of state[k])queue(k,r.id,strip(r));queue('prefs','crm_settings',state.settings)}
+
+/* =============== toast =============== */
+let tT=null,undoFn=null;
+function toast(msg,undo){$('#toastText').textContent=msg;undoFn=undo||null;$('#toastBtn').hidden=!undo;$('#toast').hidden=false;clearTimeout(tT);tT=setTimeout(()=>{$('#toast').hidden=true;undoFn=null},undo?5000:2800)}
+$('#toastBtn').addEventListener('click',()=>{if(undoFn)undoFn();undoFn=null;$('#toast').hidden=true});
+
+/* =============== theme =============== */
+let theme=lsGet('crm_theme','auto');
+function applyTheme(){const r=document.documentElement;if(theme==='auto')r.removeAttribute('data-theme');else r.setAttribute('data-theme',theme);const b=$('#themeBtn');b.textContent='';b.append(icon(theme==='dark'?'moon':theme==='light'?'sun':'auto'));b.setAttribute('aria-label','Тема: '+({auto:'как в системе',dark:'тёмная',light:'светлая'})[theme])}
+$('#themeBtn').addEventListener('click',()=>{theme=theme==='auto'?'dark':theme==='dark'?'light':'auto';lsSet('crm_theme',theme);applyTheme();toast('Тема: '+({auto:'как в системе',dark:'тёмная',light:'светлая'})[theme]);renderAll()});
+
+/* =============== navigation =============== */
+const VIEWS=[['home','Главная'],['pipe','Воронка'],['clients','Заказчики'],['reports','Отчёты']];
+let view=lsGet('crm_view','home');
+function nav(v){
+  view=v;lsSet('crm_view',v);
+  for(const id of ['home','pipe','clients','reports','settings'])$('#v-'+id).hidden=id!==v;
+  drawNav();render(v);window.scrollTo(0,0);
+}
+function drawNav(){
+  const open=state.loads.filter(l=>ACTIVE.includes(l.stage)).length;
+  for(const box of [$('#nav'),$('#tabbar')]){
+    box.textContent='';const isTab=box.id==='tabbar';
+    for(const [id,name] of VIEWS){
+      const b=h('button',{type:'button',class:isTab?'tab':null,'aria-current':view===id?'page':null,onclick:()=>nav(id)});
+      if(isTab)b.append(h('span',{class:'ic'},icon(id)),name);
+      else{b.append(icon(id),name);if(id==='pipe'&&open)b.append(h('span',{class:'cnt'},open))}
+      box.append(b);
+    }
+  }
+}
+$('#setBtn').addEventListener('click',()=>nav(view==='settings'?'home':'settings'));
+$('#newLoad').addEventListener('click',()=>openLoad(null));
+
+/* =============== sheet =============== */
+let sheetOpen=false;
+function openSheet(build){
+  const s=$('#sheet');s.textContent='';s.append(h('div',{class:'grab'}));build(s);
+  $('#scrim').hidden=false;s.hidden=false;requestAnimationFrame(()=>{$('#scrim').classList.add('on');s.classList.add('on')});sheetOpen=true;
+}
+function closeSheet(){const s=$('#sheet');$('#scrim').classList.remove('on');s.classList.remove('on');sheetOpen=false;setTimeout(()=>{if(!sheetOpen){s.hidden=true;$('#scrim').hidden=true}},250)}
+$('#scrim').addEventListener('click',closeSheet);
+document.addEventListener('keydown',e=>{if(e.key==='Escape'&&sheetOpen)closeSheet()});
+const shHead=(title,sub)=>h('div',{class:'sh'},h('div',null,sub?h('div',{class:'eyebrow'},sub):null,h('h2',null,title)),h('button',{type:'button',class:'ibtn','aria-label':'Закрыть',onclick:closeSheet},icon('x')));
+const fl=(label,el)=>h('label',{class:'fl'},h('span',null,label),el);
+
+/* =============== load sheet =============== */
+function openLoad(l,preset){
+  const isNew=!l;const d=Object.assign({stage:'found',source:'ati',truck:''},l||{},preset||{});
+  let stage=d.stage;
+  openSheet(s=>{
+    s.append(shHead(isNew?'Новая заявка':route(d),isNew?'Заявка':clientName(d)));
+    const from=h('input',{class:'field',id:'lFrom',value:d.from||'',placeholder:'Набережные Челны',autocomplete:'off'});
+    const to=h('input',{class:'field',id:'lTo',value:d.to||'',placeholder:'Москва',autocomplete:'off'});
+    const cargo=h('input',{class:'field',id:'lCargo',value:d.cargo||'',placeholder:'Экскаватор 32 т, 3,4 м шир.'});
+    const dl=h('datalist',{id:'clientList'},state.clients.slice().sort((a,b)=>a.name.localeCompare(b.name)).map(c=>h('option',{value:c.name})));
+    const client=h('input',{class:'field',id:'lClient',list:'clientList',value:(clientOf(d.clientId)||{}).name||'',placeholder:'Начни вводить название',autocomplete:'off'});
+    const rate=h('input',{class:'field',id:'lRate',inputmode:'numeric',value:d.rate?nf.format(d.rate):'',placeholder:'120 000'});
+    const km=h('input',{class:'field',id:'lKm',inputmode:'numeric',value:d.km||'',placeholder:'1 000'});
+    const verdict=h('div',{class:'verdict m'});
+    const num=v=>parseFloat(String(v).replace(/\s/g,'').replace(',','.'))||0;
+    function upd(){const r=num(rate.value),k=num(km.value);const v=k>0&&r>0?r/k:0;const c=rateClass(v);verdict.className='verdict '+c;verdict.textContent='';
+      verdict.append(h('span',null,!v?'Укажи ставку и километры':c==='g'?'Выгодно: выше цели '+set().targetRate+' ₽/км':c==='m'?'Нормально: выше минимума '+set().minRate+' ₽/км':'Ниже минимума '+set().minRate+' ₽/км'),h('b',null,v?nf.format(Math.round(v))+' ₽/км':'—'))}
+    rate.addEventListener('input',()=>{const n=num(rate.value);if(n)rate.value=nf.format(n);upd()});km.addEventListener('input',upd);upd();
+    const truck=h('select',{class:'field',id:'lTruck'},h('option',{value:''},'Не выбран'),Array.from({length:set().trucks},(_,i)=>h('option',{value:String(i+1)},'Трал '+(i+1))),h('option',{value:'hired'},'Привлечённый'));truck.value=d.truck||'';
+    const ld=h('input',{class:'field',type:'date',id:'lLoad',value:d.loadDate||''});
+    const ud=h('input',{class:'field',type:'date',id:'lUnload',value:d.unloadDate||''});
+    const pd=h('input',{class:'field',type:'date',id:'lPay',value:d.payDue||''});
+    const src=h('select',{class:'field',id:'lSrc'},SOURCES.map(x=>h('option',{value:x[0]},x[1])));src.value=d.source||'ati';
+    const note=h('textarea',{class:'field',id:'lNote',placeholder:'Контакты на погрузке, условия, документы'},d.note||'');
+    const stBox=h('div',{class:'stages',role:'group','aria-label':'Этап'});
+    const drawSt=()=>{stBox.textContent='';for(const [id,n] of STAGES)stBox.append(h('button',{type:'button','aria-pressed':String(id===stage),onclick:()=>{stage=id;drawSt()}},n))};drawSt();
+    s.append(h('div',{class:'form'},
+      fl('Этап',stBox),
+      h('div',{class:'f2'},fl('Откуда',from),fl('Куда',to)),
+      fl('Заказчик',client),dl,
+      fl('Груз и габариты',cargo),
+      h('div',{class:'f2'},fl('Ставка, ₽',rate),fl('Км по маршруту',km)),verdict,
+      h('div',{class:'f2'},fl('Погрузка',ld),fl('Выгрузка',ud)),
+      h('div',{class:'f2'},fl('Трал',truck),fl('Оплата до',pd)),
+      fl('Откуда заявка',src),fl('Заметка',note),
+      h('div',{class:'btns',style:'grid-template-columns:'+(isNew?'1fr':'2fr 1fr')},
+        h('button',{type:'button',class:'btn',onclick:save},isNew?'Создать заявку':'Сохранить'),
+        isNew?null:h('button',{type:'button',class:'btn danger',onclick:()=>{const old=Object.assign({},l);del('loads',l.id);closeSheet();toast('Заявка удалена',()=>put('loads',old))}},'Удалить'))));
+    function save(){
+      const cname=client.value.trim();let cid=null;
+      if(cname){let c=state.clients.find(x=>x.name.toLowerCase()===cname.toLowerCase());if(!c){c={id:newId(),name:cname,contact:'',phone:'',notes:[],createdAt:Date.now()};put('clients',c)}cid=c.id}
+      const r=num(rate.value),k=num(km.value);
+      if(!from.value.trim()&&!to.value.trim()){toast('Укажи, откуда и куда');from.focus();return}
+      let pay=pd.value;if(!pay&&ud.value&&(stage==='done'||stage==='paid'||stage==='road'))pay=ymd(addDays(parseYmd(ud.value),set().payDays));
+      const row=Object.assign({},l||{id:newId(),createdAt:Date.now()},{from:from.value.trim(),to:to.value.trim(),cargo:cargo.value.trim(),clientId:cid,rate:r,km:k,truck:truck.value,loadDate:ld.value,unloadDate:ud.value,payDue:pay,source:src.value,note:note.value.trim()});
+      if(row.stage!==stage){row.stage=stage;row.stageAt=Date.now();if(stage==='paid')row.paidAt=Date.now()}
+      put('loads',row);closeSheet();toast(isNew?'Заявка создана':'Сохранено');
+    }
+  });
+}
+
+/* =============== client sheet =============== */
+function clientStats(c){
+  const ls=state.loads.filter(l=>l.clientId===c.id);
+  const paid=ls.filter(l=>l.stage==='paid').reduce((s,l)=>s+l.rate,0);
+  const open=ls.filter(l=>ACTIVE.includes(l.stage)).reduce((s,l)=>s+l.rate,0);
+  const od=ls.filter(overdue);
+  const nPaid=ls.filter(l=>l.stage==='paid'||l.stage==='done').length;
+  const status=od.length?['bad','Долг']:nPaid>=2?['ok','Постоянный']:nPaid>=1?['acc','Работали']:['','Новый'];
+  const times=[c.createdAt||0,...ls.map(l=>l.stageAt||l.createdAt||0),...(c.notes||[]).map(n=>n.at||0)];
+  const last=Math.max(...times);
+  return {ls,paid,open,od,status,last};
+}
+const ago=t=>{if(!t)return '—';const d=daysBetween(new Date(new Date(t).toDateString()),today());return d<=0?'Сегодня':d===1?'Вчера':d<7?d+' '+plural(d,['день','дня','дней'])+' назад':fDay.format(new Date(t))};
+function openClient(c){
+  openSheet(s=>{
+    const st=clientStats(c);
+    s.append(shHead(c.name,'Заказчик'));
+    const tel=(c.phone||'').replace(/[^\d+]/g,'');
+    s.append(h('div',{class:'btns'},
+      tel?h('a',{class:'btn',href:'tel:'+tel},icon('phone'),'Позвонить'):h('button',{type:'button',class:'btn',disabled:true,style:'opacity:.5'},icon('phone'),'Нет номера'),
+      tel?h('a',{class:'btn ghost',href:'https://wa.me/'+tel.replace(/^\+/,'').replace(/^8/,'7'),target:'_blank',rel:'noopener'},icon('msg'),'WhatsApp'):h('span'),
+      h('button',{type:'button',class:'btn ghost',onclick:()=>{closeSheet();setTimeout(()=>openLoad(null,{clientId:c.id}),260)}},icon('plus'),'Заявка')));
+    s.append(h('div',{class:'tiles',style:'margin-top:12px'},
+      h('div',{class:'tile'},h('span',null,'Оплачено всего'),h('b',null,rub(st.paid))),
+      h('div',{class:'tile'},h('span',null,'В работе'),h('b',null,rub(st.open))),
+      h('div',{class:'tile'},h('span',null,'Статус'),h('b',null,h('span',{class:'pill '+st.status[0]},st.status[1]))),
+      h('div',{class:'tile'},h('span',null,'Последний контакт'),h('b',null,ago(st.last)))));
+    s.append(h('div',{class:'sec'},'Заявки'));
+    if(st.ls.length)s.append(h('div',{class:'rows'},st.ls.slice().sort((a,b)=>(b.createdAt||0)-(a.createdAt||0)).map(l=>h('button',{type:'button',class:'row',onclick:()=>{closeSheet();setTimeout(()=>openLoad(l),260)}},
+      h('div',{class:'t'},h('b',null,route(l)),h('span',null,stName(l.stage)+(l.loadDate?' · '+fDay.format(parseYmd(l.loadDate)):''))),h('div',{class:'v'},rub(l.rate),h('small',null,perKm(l)?Math.round(perKm(l))+' ₽/км':''))))));
+    else s.append(h('p',{class:'sub'},'Заявок пока нет.'));
+    s.append(h('div',{class:'sec'},'Заметки и звонки'));
+    const ni=h('input',{class:'field',id:'noteIn',placeholder:'Например: обещал груз на следующей неделе'});
+    const addNote=()=>{const t=ni.value.trim();if(!t)return;const notes=(c.notes||[]).concat({at:Date.now(),text:t}).slice(-100);patch('clients',c.id,{notes});closeSheet();setTimeout(()=>openClient(clientOf(c.id)),260)};
+    ni.addEventListener('keydown',e=>{if(e.key==='Enter'){e.preventDefault();addNote()}});
+    s.append(h('div',{style:'display:grid;grid-template-columns:minmax(0,1fr) auto;gap:8px'},ni,h('button',{type:'button',class:'btn',onclick:addNote},'Добавить')));
+    const tl=[...(c.notes||[]).map(n=>({at:n.at,b:n.text,s:'Заметка'})),...st.ls.map(l=>({at:l.stageAt||l.createdAt,b:route(l)+' — '+stName(l.stage),s:'Заявка · '+rub(l.rate)}))].sort((a,b)=>b.at-a.at).slice(0,30);
+    if(tl.length)s.append(h('ul',{class:'tl',style:'margin-top:14px'},tl.map(x=>h('li',null,h('i'),h('div',null,h('b',null,x.b),h('span',null,x.s+' · '+ago(x.at)))))));
+    s.append(h('div',{class:'sec'},'Данные'));
+    const nm=h('input',{class:'field',value:c.name}),ct=h('input',{class:'field',value:c.contact||'',placeholder:'Иван Петров, логист'}),ph=h('input',{class:'field',type:'tel',value:c.phone||'',placeholder:'+7 900 000-00-00'});
+    s.append(h('div',{class:'form'},fl('Компания',nm),h('div',{class:'f2'},fl('Контакт',ct),fl('Телефон',ph)),
+      h('div',{class:'btns',style:'grid-template-columns:2fr 1fr'},h('button',{type:'button',class:'btn ghost',onclick:()=>{patch('clients',c.id,{name:nm.value.trim()||c.name,contact:ct.value.trim(),phone:ph.value.trim()});closeSheet();toast('Сохранено')}},'Сохранить'),
+        h('button',{type:'button',class:'btn danger',onclick:()=>{if(st.ls.length){toast('Сначала удали или перенеси заявки этого заказчика');return}const old=Object.assign({},c);del('clients',c.id);closeSheet();toast('Заказчик удалён',()=>put('clients',old))}},'Удалить'))));
+  });
+}
+function newClient(){
+  openSheet(s=>{
+    s.append(shHead('Новый заказчик'));
+    const nm=h('input',{class:'field',id:'cName',placeholder:'ООО «СтройТех»'}),ct=h('input',{class:'field',placeholder:'Иван, логист'}),ph=h('input',{class:'field',type:'tel',placeholder:'+7 900 000-00-00'});
+    s.append(h('div',{class:'form'},fl('Компания',nm),h('div',{class:'f2'},fl('Контакт',ct),fl('Телефон',ph)),
+      h('button',{type:'button',class:'btn',onclick:()=>{const n=nm.value.trim();if(!n){nm.focus();return}put('clients',{id:newId(),name:n,contact:ct.value.trim(),phone:ph.value.trim(),notes:[],createdAt:Date.now()});closeSheet();toast('Заказчик добавлен')}},'Добавить')));
+    setTimeout(()=>nm.focus(),300);
+  });
+}
+
+/* =============== HOME =============== */
+function sumRev(from,to){return state.loads.filter(l=>isRevenue(l)).filter(l=>{const d=revDate(l);return d&&d>=from&&d<to}).reduce((s,l)=>s+l.rate,0)}
+function attention(){
+  const t=today(),out=[];
+  for(const l of state.loads){
+    if(overdue(l)){const d=daysBetween(parseYmd(l.payDue),t);out.push({lvl:'bad',l,why:'Оплата просрочена на '+d+' '+plural(d,['день','дня','дней']),w:3e9+d})}
+    else if(l.stage==='ok'&&l.loadDate&&parseYmd(l.loadDate)<t)out.push({lvl:'warn',l,why:'Погрузка была '+fDay.format(parseYmd(l.loadDate))+', а заявка ещё «Подтверждён»',w:2e9});
+    else if(l.stage==='road'&&l.unloadDate&&parseYmd(l.unloadDate)<t)out.push({lvl:'warn',l,why:'Выгрузка была '+fDay.format(parseYmd(l.unloadDate))+' — отметь «Выгружен»',w:2e9});
+    else if((l.stage==='found'||l.stage==='talk')&&perKm(l)&&perKm(l)<set().minRate)out.push({lvl:'warn',l,why:'Ставка '+Math.round(perKm(l))+' ₽/км — ниже минимума '+set().minRate,w:1e9});
+    else if(l.stage==='talk'&&l.stageAt&&daysBetween(new Date(new Date(l.stageAt).toDateString()),t)>=3)out.push({lvl:'warn',l,why:'Торг висит '+daysBetween(new Date(new Date(l.stageAt).toDateString()),t)+' дн. — дожми или закрой',w:5e8});
+  }
+  return out.sort((a,b)=>b.w-a.w);
+}
+function renderHome(){
+  const box=$('#v-home');box.textContent='';
+  const hr=new Date().getHours();const greet=hr<5?'Доброй ночи':hr<12?'Доброе утро':hr<18?'Добрый день':'Добрый вечер';
+  const t=today(),m0=new Date(t.getFullYear(),t.getMonth(),1),m1=new Date(t.getFullYear(),t.getMonth()+1,1),pm0=new Date(t.getFullYear(),t.getMonth()-1,1);
+  box.append(h('div',{class:'vhead'},h('div',null,h('div',{class:'eyebrow'},cap(fDayW.format(t))),h('h1',null,greet+(set().name?', '+set().name:'')),h('p',{class:'lead'},'Как идут дела в этом месяце.'))));
+  if(!state.loads.length&&state.ready){box.append(emptyStart());return}
+  const rev=sumRev(m0,m1),dayN=t.getDate(),pmDays=new Date(t.getFullYear(),t.getMonth(),0).getDate();
+  const prevSame=sumRev(pm0,addDays(pm0,Math.min(dayN,pmDays)));
+  const delta=prevSame?Math.round((rev-prevSame)/prevSame*100):null;
+  const monthLoads=state.loads.filter(l=>isRevenue(l)&&revDate(l)>=m0&&revDate(l)<m1);
+  const km=monthLoads.reduce((s,l)=>s+(l.km||0),0),avg=km?monthLoads.reduce((s,l)=>s+l.rate,0)/km:0;
+  const waiting=state.loads.filter(l=>l.stage==='done'),waitSum=waiting.reduce((s,l)=>s+l.rate,0),od=waiting.filter(overdue);
+  const g=h('div',{class:'grid home'});
+  const goal=set().goal||1;
+  g.append(h('div',{class:'card hero s3'},
+    h('div',{class:'ct'},h('h3',null,'Выручка за '+fMonth.format(t).replace(/ь$/,'ь')),delta==null?null:h('span',{class:'delta '+(delta>=0?'up':'down')},(delta>=0?'+':'')+delta+'% к прошлому месяцу')),
+    h('div',{class:'big'},rub(rev)),
+    h('div',{class:'prog'},h('i',{style:'width:'+Math.min(100,rev/goal*100)+'%'})),
+    h('div',{class:'sub',style:'display:flex;justify-content:space-between;gap:8px'},h('span',null,'Цель '+krub(goal)),h('span',null,rev>=goal?'Цель выполнена':'Осталось '+krub(goal-rev))),
+    h('div',{class:'minis'},
+      h('div',{class:'mini'},h('span',null,'Средний ₽/км'),h('b',{style:avg&&avg<set().minRate?'color:var(--danger)':''},avg?nf.format(Math.round(avg)):'—')),
+      h('div',{class:'mini'},h('span',null,'Рейсов'),h('b',null,monthLoads.length)),
+      h('div',{class:'mini'},h('span',null,'Ждём оплаты'),h('b',{style:od.length?'color:var(--danger)':''},krub(waitSum))))));
+  // pipeline
+  const act=state.loads.filter(l=>ACTIVE.includes(l.stage)),actSum=act.reduce((s,l)=>s+l.rate,0);
+  const st=ACTIVE.map(id=>{const ls=act.filter(l=>l.stage===id);return {id,n:ls.length,sum:ls.reduce((s,l)=>s+l.rate,0)}});
+  g.append(h('div',{class:'card s3'},
+    h('div',{class:'ct'},h('h3',null,'В работе'),h('button',{type:'button',class:'link',onclick:()=>nav('pipe')},'Воронка →')),
+    h('div',{style:'display:flex;align-items:baseline;gap:10px;flex-wrap:wrap'},h('span',{class:'big'},rub(actSum)),h('span',{class:'sub'},act.length+' '+plural(act.length,['заявка','заявки','заявок']))),
+    h('div',{class:'stack'},st.filter(x=>x.sum>0).map(x=>h('i',{title:stName(x.id),style:'flex:'+x.sum+';background:'+stColor(x.id)}))),
+    h('div',{class:'legend'},st.map(x=>h('div',null,h('i',{style:'background:'+stColor(x.id)}),h('span',null,stName(x.id)+' · '+x.n),h('b',null,krub(x.sum)))))));
+  // week
+  const w0=addDays(t,-((t.getDay()+6)%7));const wk=[];for(let i=0;i<7;i++){const d=addDays(w0,i);wk.push({d,sum:sumRev(d,addDays(d,1))})}
+  const wmax=Math.max(1,...wk.map(x=>x.sum));const wsum=wk.reduce((s,x)=>s+x.sum,0);
+  let sel=wk.findIndex(x=>+x.d===+t);
+  const wcard=h('div',{class:'card s2 s2l'});
+  const drawWeek=()=>{wcard.textContent='';wcard.append(h('div',{class:'ct'},h('h3',null,'Эта неделя'),h('span',{class:'sub'},'выгружено на '+krub(wsum))),
+    h('div',{class:'wbars'},wk.map((x,i)=>h('button',{type:'button',class:'wb'+(+x.d===+t?' today':'')+(x.d>t?' future':''),onclick:()=>{sel=i;drawWeek()},'aria-label':fDay.format(x.d)+': '+rub(x.sum)},
+      h('div',{class:'bar',style:'height:'+(x.d>t?18:Math.max(3,x.sum/wmax*100))+'%'},i===sel&&x.d<=t?h('span',{class:'tip'},krub(x.sum)):null),h('span',{class:'lbl'},['Пн','Вт','Ср','Чт','Пт','Сб','Вс'][i])))))};
+  drawWeek();g.append(wcard);
+  // attention
+  const att=attention();
+  g.append(h('div',{class:'card s2 s2l'},h('div',{class:'ct'},h('h3',null,'Требуют внимания'),att.length?h('span',{class:'pill '+(att.some(a=>a.lvl==='bad')?'bad':'warn')},att.length):h('span',{class:'pill ok'},'всё в порядке')),
+    att.length?h('div',{class:'rows'},att.slice(0,4).map(a=>h('button',{type:'button',class:'row att'+(a.lvl==='bad'?' bad':''),onclick:()=>openLoad(a.l)},h('div',{class:'av'},initials(clientName(a.l))),h('div',{class:'t'},h('b',null,route(a.l)),h('span',null,a.why)),h('div',{class:'v'},krub(a.l.rate))))):h('p',{class:'sub'},'Просрочек нет, ставки в норме.'),
+    att.length>4?h('p',{class:'sub',style:'margin:8px 0 0'},'и ещё '+(att.length-4)):null));
+  // next up
+  const ev=[];for(const l of state.loads){if(l.stage==='ok'&&l.loadDate&&parseYmd(l.loadDate)>=t)ev.push({d:parseYmd(l.loadDate),k:'Погрузка',l});if((l.stage==='road'||l.stage==='ok')&&l.unloadDate&&parseYmd(l.unloadDate)>=t)ev.push({d:parseYmd(l.unloadDate),k:'Выгрузка',l})}
+  ev.sort((a,b)=>a.d-b.d);const nx=ev[0];
+  g.append(h('div',{class:'card s2 s2l'},h('div',{class:'ct'},h('h3',null,'Ближайшее'),ev.length>1?h('span',{class:'sub'},'ещё '+(ev.length-1)):null),
+    nx?h('div',{class:'next'},h('span',{class:'when'},nx.k+' · '+(+nx.d===+t?'сегодня':+nx.d===+addDays(t,1)?'завтра':fDay.format(nx.d))),h('b',null,route(nx.l)),h('span',{class:'sub'},clientName(nx.l)+(nx.l.truck?' · '+truckName(nx.l.truck):'')+(nx.l.cargo?' · '+nx.l.cargo:'')),h('button',{type:'button',class:'btn ghost',onclick:()=>openLoad(nx.l)},'Открыть заявку')):h('p',{class:'sub'},'Погрузок и выгрузок впереди нет.')));
+  // trucks
+  const tr=[];for(let i=1;i<=set().trucks;i++){const road=state.loads.find(l=>l.truck===String(i)&&l.stage==='road');const ok=state.loads.find(l=>l.truck===String(i)&&l.stage==='ok');tr.push({i,road,ok})}
+  const free=tr.filter(x=>!x.road&&!x.ok).length;
+  g.append(h('div',{class:'card s6'},h('div',{class:'ct'},h('h3',null,'Тралы'),h('span',{class:'sub'},free+' '+plural(free,['свободен','свободны','свободны'])+' из '+set().trucks)),
+    h('div',{class:'trucks'},tr.map(x=>h('button',{type:'button',class:'truck'+(x.road?' go':x.ok?' wait':''),style:'cursor:'+(x.road||x.ok?'pointer':'default'),onclick:()=>{if(x.road||x.ok)openLoad(x.road||x.ok)}},h('b',null,'№'+x.i),h('span',null,x.road?'→ '+(x.road.to||'в пути'):x.ok?'погрузка '+(x.ok.loadDate?fDay.format(parseYmd(x.ok.loadDate)):''):'свободен'))))));
+  box.append(g);
+}
+const truckName=t=>t==='hired'?'Привлечённый':t?'Трал '+t:'';
+function emptyStart(){
+  return h('div',{class:'card empty'},h('b',null,'Пока ни одной заявки'),'Добавь первую заявку: откуда, куда, ставка и километры. Приложение само посчитает ₽/км и покажет её в воронке.',
+    h('div',{style:'display:flex;gap:8px;justify-content:center;flex-wrap:wrap'},h('button',{type:'button',class:'btn',onclick:()=>openLoad(null)},icon('plus'),'Новая заявка'),h('button',{type:'button',class:'btn ghost',onclick:loadDemo},'Показать на примере')));
+}
+
+/* =============== PIPELINE =============== */
+let pFilter=lsGet('crm_pf','all'),pQuery='';
+function renderPipe(){
+  const box=$('#v-pipe');box.textContent='';
+  const list=pipeFiltered();
+  box.append(h('div',{class:'vhead'},h('div',null,h('div',{class:'eyebrow'},'Заявки'),h('h1',null,'Воронка'),h('p',{class:'lead'},'Перетащи карточку в другой этап: зажми её пальцем на полсекунды.')),
+    h('span',{class:'sub num'},list.filter(l=>l.stage!=='lost').length+' '+plural(list.length,['заявка','заявки','заявок'])+' · '+krub(list.filter(l=>l.stage!=='lost').reduce((s,l)=>s+l.rate,0)))));
+  const q=h('input',{type:'search',id:'pq',placeholder:'Город, заказчик, груз',value:pQuery,oninput:e=>{pQuery=e.target.value;drawBoard()}});
+  const chips=h('div',{class:'chips'},[['all','Все'],['30','Погрузка в 30 дней'],['pay','Ждут оплаты'],['low','Ниже '+set().minRate+' ₽/км']].map(([id,n])=>h('button',{type:'button',class:'chip','aria-pressed':String(pFilter===id),onclick:()=>{pFilter=id;lsSet('crm_pf',id);renderPipe()}},n)));
+  box.append(h('div',{class:'toolbar'},h('label',{class:'search'},icon('search'),q),chips));
+  const board=h('div',{class:'board',id:'board'});box.append(board);
+  drawBoard();
+  if(!state.loads.length&&state.ready)box.append(emptyStart());
+}
+function pipeFiltered(){
+  const t=today();const q=pQuery.trim().toLowerCase();
+  return state.loads.filter(l=>{
+    if(pFilter==='30'&&!(l.loadDate&&parseYmd(l.loadDate)>=addDays(t,-1)&&parseYmd(l.loadDate)<=addDays(t,30)))return false;
+    if(pFilter==='pay'&&l.stage!=='done')return false;
+    if(pFilter==='low'&&!(perKm(l)&&perKm(l)<set().minRate))return false;
+    if(q&&!(route(l)+' '+clientName(l)+' '+(l.cargo||'')).toLowerCase().includes(q))return false;
+    return true;
+  });
+}
+function lcard(l){
+  const v=perKm(l);
+  const c=h('div',{class:'lcard',tabindex:'0','data-id':l.id,role:'button','aria-label':route(l)+', '+rub(l.rate)+', '+stName(l.stage)},
+    h('div',{class:'cl'},h('span',{class:'av',style:'width:20px;height:20px;font-size:11px;border-radius:6px'},initials(clientName(l))),h('span',null,clientName(l))),
+    h('div',{class:'rt'},route(l)),
+    h('div',{class:'mn'},h('b',null,rub(l.rate)),v?h('span',{class:'rpk '+rateClass(v)},Math.round(v)+' ₽/км'):h('span',{class:'sub'},l.km?l.km+' км':'')),
+    h('div',{class:'ft'},
+      l.loadDate?h('span',{class:'pill'},'⟶ '+fDay.format(parseYmd(l.loadDate))):null,
+      l.truck?h('span',{class:'pill acc'},truckName(l.truck)):null,
+      overdue(l)?h('span',{class:'pill bad'},'просрочка'):l.stage==='done'&&l.payDue?h('span',{class:'pill warn'},'оплата до '+fDay.format(parseYmd(l.payDue))):null));
+  c.addEventListener('keydown',e=>{
+    if(e.key==='Enter'){openLoad(l);return}
+    if(e.altKey&&(e.key==='ArrowRight'||e.key==='ArrowLeft')){e.preventDefault();const i=stIdx(l.stage)+(e.key==='ArrowRight'?1:-1);if(i>=0&&i<STAGES.length)moveTo(l,STAGES[i][0],true)}
+  });
+  attachDrag(c,l);
+  return c;
+}
+function drawBoard(){
+  const board=$('#board');if(!board)return;const sl=board.scrollLeft;board.textContent='';
+  const list=pipeFiltered();
+  for(const [id,name] of STAGES){
+    const ls=list.filter(l=>l.stage===id).sort((a,b)=>(a.loadDate||'9')<(b.loadDate||'9')?-1:1);
+    const sum=ls.reduce((s,l)=>s+l.rate,0);
+    const col=h('div',{class:'col','data-stage':id},
+      h('div',{class:'colh'},h('b',null,h('i',{style:'background:'+stColor(id)}),name),h('span',{class:'n'},ls.length)),
+      h('div',{class:'colsum'},krub(sum)),h('div',{class:'colbar',style:'background:'+stColor(id)}),
+      ls.map(lcard),
+      h('div',{class:'drop'},ls.length?'Перетащи сюда':'Пусто — перетащи заявку сюда'));
+    board.append(col);
+  }
+  board.scrollLeft=sl;
+}
+function moveTo(l,stage,focus){
+  if(l.stage===stage)return;
+  const prev={stage:l.stage,stageAt:l.stageAt,paidAt:l.paidAt,payDue:l.payDue};
+  const p={stage,stageAt:Date.now()};
+  if(stage==='paid')p.paidAt=Date.now();
+  if((stage==='done'||stage==='paid')&&!l.unloadDate)p.unloadDate=ymd(today());
+  if(stage==='done'&&!l.payDue)p.payDue=ymd(addDays(parseYmd(p.unloadDate||l.unloadDate),set().payDays));
+  patch('loads',l.id,p);
+  toast(stName(stage)+': '+route(l)+', '+krub(l.rate),()=>patch('loads',l.id,prev));
+  if(focus)setTimeout(()=>{const el=document.querySelector('.lcard[data-id="'+l.id+'"]');if(el)el.focus()},30);
+}
+/* drag: long-press on touch, short press-move on mouse */
+let drag=null;
+document.addEventListener('touchmove',e=>{if(drag&&drag.active)e.preventDefault()},{passive:false});
+function attachDrag(el,l){
+  el.addEventListener('pointerdown',e=>{
+    if(e.button>0)return;
+    const st={x:e.clientX,y:e.clientY,id:e.pointerId,moved:false,active:false,el,l,type:e.pointerType};
+    drag=st;
+    st.timer=setTimeout(()=>{if(drag===st&&!st.moved)begin(st,st.x,st.y)},e.pointerType==='mouse'?9e9:330);
+  });
+}
+function begin(st,x,y){
+  st.active=true;try{navigator.vibrate&&navigator.vibrate(12)}catch(_){}
+  const r=st.el.getBoundingClientRect();
+  st.dx=x-r.left;st.dy=y-r.top;
+  st.ghost=st.el.cloneNode(true);st.ghost.classList.add('dragghost');st.ghost.style.width=r.width+'px';document.body.append(st.ghost);
+  st.el.classList.add('dragging');moveGhost(st,x,y);
+  const loop=()=>{if(!st.active)return;const b=$('#board');if(b){const br=b.getBoundingClientRect();if(st.cx<br.left+40)b.scrollLeft-=12;else if(st.cx>br.right-40)b.scrollLeft+=12}st.raf=requestAnimationFrame(loop)};loop();
+}
+function moveGhost(st,x,y){
+  st.cx=x;st.cy=y;st.ghost.style.left=(x-st.dx)+'px';st.ghost.style.top=(y-st.dy)+'px';
+  const under=document.elementFromPoint(x,y);const col=under&&under.closest('.col');
+  document.querySelectorAll('.col.over').forEach(c=>{if(c!==col)c.classList.remove('over')});
+  if(col)col.classList.add('over');st.col=col;
+}
+document.addEventListener('pointermove',e=>{
+  const st=drag;if(!st||e.pointerId!==st.id)return;
+  const dx=e.clientX-st.x,dy=e.clientY-st.y;
+  if(!st.active){if(Math.hypot(dx,dy)>8){st.moved=true;clearTimeout(st.timer);if(st.type==='mouse')begin(st,st.x,st.y);else{drag=null;return}}else return}
+  moveGhost(st,e.clientX,e.clientY);
+});
+function endDrag(e,cancel){
+  const st=drag;if(!st||(e&&e.pointerId!==st.id))return;clearTimeout(st.timer);drag=null;
+  if(!st.active){if(!st.moved&&!cancel)openLoad(st.l);return}
+  st.active=false;cancelAnimationFrame(st.raf);st.ghost.remove();st.el.classList.remove('dragging');
+  document.querySelectorAll('.col.over').forEach(c=>c.classList.remove('over'));
+  if(!cancel&&st.col)moveTo(st.l,st.col.dataset.stage);
+}
+document.addEventListener('pointerup',e=>endDrag(e,false));
+document.addEventListener('pointercancel',e=>{const st=drag;if(st&&!st.active){clearTimeout(st.timer);drag=null}else endDrag(e,true)});
+
+/* =============== CLIENTS =============== */
+let cFilter='all',cQuery='';
+function renderClients(){
+  const box=$('#v-clients');box.textContent='';
+  box.append(h('div',{class:'vhead'},h('div',null,h('div',{class:'eyebrow'},'Люди'),h('h1',null,'Заказчики'),h('p',{class:'lead'},'Кому возишь и когда последний раз общались.')),h('button',{type:'button',class:'btn',onclick:newClient},icon('plus'),'Заказчик')));
+  const q=h('input',{type:'search',id:'cq',placeholder:'Найти заказчика',value:cQuery,oninput:e=>{cQuery=e.target.value;drawList()}});
+  const chips=h('div',{class:'chips'},[['all','Все'],['ok','Постоянные'],['new','Новые'],['bad','Долги']].map(([id,n])=>h('button',{type:'button',class:'chip','aria-pressed':String(cFilter===id),onclick:()=>{cFilter=id;renderClients()}},n)));
+  box.append(h('div',{class:'toolbar'},h('label',{class:'search'},icon('search'),q),chips));
+  const listBox=h('div',{class:'tbl'});box.append(listBox);
+  function drawList(){
+    listBox.textContent='';
+    const qq=cQuery.trim().toLowerCase();
+    const rows=state.clients.map(c=>({c,st:clientStats(c)})).filter(({c,st})=>{
+      if(cFilter==='ok'&&st.status[1]!=='Постоянный')return false;
+      if(cFilter==='new'&&st.status[1]!=='Новый')return false;
+      if(cFilter==='bad'&&!st.od.length)return false;
+      if(qq&&!(c.name+' '+(c.contact||'')+' '+(c.phone||'')).toLowerCase().includes(qq))return false;return true;
+    }).sort((a,b)=>b.st.last-a.st.last);
+    if(!rows.length){listBox.append(h('div',{class:'card empty'},h('b',null,state.clients.length?'Никого не нашлось':'Заказчиков пока нет'),state.clients.length?'Попробуй другое слово.':'Заказчик появится сам, когда укажешь его в заявке. Или добавь вручную.'));return}
+    for(const {c,st} of rows)listBox.append(h('button',{type:'button',class:'crow',onclick:()=>openClient(c)},
+      h('div',{class:'av'},initials(c.name)),
+      h('div',{class:'nm'},h('b',null,c.name),h('span',null,[c.contact,c.phone].filter(Boolean).join(' · ')||'Контакт не указан')),
+      h('div',{class:'hide-m sub'},st.ls.length+' '+plural(st.ls.length,['заявка','заявки','заявок'])),
+      h('div',{class:'hide-m'},h('span',{class:'pill '+st.status[0]},st.status[1])),
+      h('div',{class:'rt'},h('b',null,st.paid?rub(st.paid):'—'),h('span',{class:'hide-m'},'оплачено')),
+      h('div',{class:'rt hide-m'},h('span',null,ago(st.last)))));
+  }
+  drawList();
+}
+
+/* =============== REPORTS =============== */
+let rPeriod=lsGet('crm_rp',90),hoverI=null;
+function renderReports(){
+  const box=$('#v-reports');box.textContent='';
+  const seg=h('div',{class:'seg'},[[30,'30 дней'],[90,'90 дней'],[365,'Год']].map(([d,n])=>h('button',{type:'button','aria-pressed':String(rPeriod===d),onclick:()=>{rPeriod=d;lsSet('crm_rp',d);hoverI=null;renderReports()}},n)));
+  box.append(h('div',{class:'vhead'},h('div',null,h('div',{class:'eyebrow'},'Аналитика'),h('h1',null,'Отчёты'),h('p',{class:'lead'},'Выручка, ставки и откуда приходят грузы.')),seg));
+  const t=addDays(today(),1),p0=addDays(t,-rPeriod),pp0=addDays(p0,-rPeriod);
+  const inR=(l,a,b)=>{const d=revDate(l);return d&&d>=a&&d<b};
+  const cur=state.loads.filter(l=>isRevenue(l)&&inR(l,p0,t)),prev=state.loads.filter(l=>isRevenue(l)&&inR(l,pp0,p0));
+  const S=ls=>ls.reduce((s,l)=>s+l.rate,0),K=ls=>ls.reduce((s,l)=>s+(l.km||0),0);
+  const avg=ls=>K(ls)?S(ls)/K(ls):0;
+  const created=(a,b)=>state.loads.filter(l=>l.createdAt&&new Date(l.createdAt)>=a&&new Date(l.createdAt)<b);
+  const conv=(a,b)=>{const ls=created(a,b);const closed=ls.filter(l=>l.stage!=='found'&&l.stage!=='talk');return closed.length?closed.filter(l=>l.stage!=='lost').length/closed.length*100:0};
+  const dl=(a,b,fmt,unit)=>{if(!b)return h('span',{class:'sub'},'нет данных за прошлый период');const d=unit==='pt'?a-b:(a-b)/b*100;return h('span',{class:'delta '+(d>=0?'up':'down')},(d>=0?'+':'')+(unit==='pt'?d.toFixed(1)+' п.п.':Math.round(d)+'%'),h('span',{class:'sub',style:'font-weight:500'},' к прошлому периоду'))};
+  const cv=conv(p0,t),pcv=conv(pp0,p0);
+  box.append(h('div',{class:'kpis'},
+    h('div',{class:'kpi'},h('span',null,'Выручка'),h('b',null,krub(S(cur))),dl(S(cur),S(prev))),
+    h('div',{class:'kpi'},h('span',null,'Рейсов выполнено'),h('b',null,cur.length),dl(cur.length,prev.length)),
+    h('div',{class:'kpi'},h('span',null,'Средний ₽/км'),h('b',{style:avg(cur)&&avg(cur)<set().minRate?'color:var(--danger)':''},avg(cur)?nf.format(Math.round(avg(cur))):'—'),dl(avg(cur),avg(prev))),
+    h('div',{class:'kpi'},h('span',null,'Взяли из найденных'),h('b',null,cv?cv.toFixed(0)+'%':'—'),dl(cv,pcv,null,'pt'))));
+  const g=h('div',{class:'grid rep',style:'margin-top:12px'});
+  // line chart
+  const lc=h('div',{class:'card s2'});g.append(lc);
+  // funnel
+  const created2=created(p0,t);const reached=STAGES.slice(0,6).map(([id,n],i)=>({n,c:created2.filter(l=>l.stage!=='lost'?stIdx(l.stage)>=i:i<=1).length}));
+  const fmax=Math.max(1,reached[0].c);
+  g.append(h('div',{class:'card'},h('div',{class:'ct'},h('h3',null,'Воронка за период'),h('span',{class:'sub'},'сколько дошли до этапа')),
+    h('div',{class:'funnel'},reached.map((x,i)=>h('div',{class:'fn'},h('div',null,x.n,h('small',null,x.c+' '+plural(x.c,['заявка','заявки','заявок']))),h('div',{class:'tr'},h('i',{style:'width:'+Math.max(x.c?3:0,x.c/fmax*100)+'%;background:'+stColor(STAGES[i][0])})))))));
+  // donut sources
+  const bySrc=SOURCES.map(([id,n,c])=>({n,c,v:S(cur.filter(l=>(l.source||'other')===id))}));const tot=bySrc.reduce((s,x)=>s+x.v,0);
+  const R=52,C=2*Math.PI*R;let off=0;
+  const svgNS='http://www.w3.org/2000/svg';const svg=document.createElementNS(svgNS,'svg');svg.setAttribute('viewBox','0 0 140 140');
+  const bg=document.createElementNS(svgNS,'circle');bg.setAttribute('cx',70);bg.setAttribute('cy',70);bg.setAttribute('r',R);bg.setAttribute('fill','none');bg.setAttribute('stroke','var(--sunk)');bg.setAttribute('stroke-width',16);svg.append(bg);
+  const segs=bySrc.filter(x=>x.v>0);
+  for(const x of segs){const len=x.v/tot*C;const gap=segs.length>1?3:0;const c=document.createElementNS(svgNS,'circle');c.setAttribute('cx',70);c.setAttribute('cy',70);c.setAttribute('r',R);c.setAttribute('fill','none');c.setAttribute('stroke',x.c);c.setAttribute('stroke-width',16);c.setAttribute('stroke-linecap','butt');c.setAttribute('stroke-dasharray',Math.max(0,len-gap)+' '+(C-Math.max(0,len-gap)));c.setAttribute('stroke-dashoffset',-off);c.setAttribute('transform','rotate(-90 70 70)');svg.append(c);off+=len}
+  const top=bySrc.slice().sort((a,b)=>b.v-a.v)[0];
+  const tx=document.createElementNS(svgNS,'text');tx.setAttribute('x',70);tx.setAttribute('y',70);tx.setAttribute('text-anchor','middle');tx.setAttribute('fill','var(--ink)');tx.setAttribute('font-size','22');tx.setAttribute('font-weight','800');tx.textContent=tot?Math.round(top.v/tot*100)+'%':'—';svg.append(tx);
+  const tx2=document.createElementNS(svgNS,'text');tx2.setAttribute('x',70);tx2.setAttribute('y',88);tx2.setAttribute('text-anchor','middle');tx2.setAttribute('fill','var(--muted)');tx2.setAttribute('font-size','11');tx2.textContent=tot?top.n:'нет данных';svg.append(tx2);
+  g.append(h('div',{class:'card'},h('div',{class:'ct'},h('h3',null,'Откуда грузы'),h('span',{class:'sub'},'доля выручки')),
+    h('div',{class:'donut'},svg,h('div',{class:'legend',style:'grid-template-columns:1fr;flex:1;min-width:140px'},bySrc.map(x=>h('div',null,h('i',{style:'background:'+x.c}),h('span',null,x.n),h('b',null,tot?Math.round(x.v/tot*100)+'%':'—')))))));
+  // leaderboard
+  const byC={};for(const l of cur){byC[l.clientId||'_']=byC[l.clientId||'_']||{v:0,n:0};byC[l.clientId||'_'].v+=l.rate;byC[l.clientId||'_'].n++}
+  const lb=Object.entries(byC).sort((a,b)=>b[1].v-a[1].v).slice(0,6);const lmax=lb.length?lb[0][1].v:1;
+  g.append(h('div',{class:'card s2'},h('div',{class:'ct'},h('h3',null,'Лучшие заказчики'),h('span',{class:'sub'},'выручка за период')),
+    lb.length?h('div',{class:'lb'},lb.map(([id,x],i)=>{const c=clientOf(id);return h('div',{class:'it'},h('span',{class:'pos'},i+1),h('span',{class:'av'},initials(c?c.name:'?')),h('div',{class:'nm'},h('b',null,c?c.name:'Без заказчика'),h('span',null,x.n+' '+plural(x.n,['рейс','рейса','рейсов']))),h('b',{class:'num'},krub(x.v)),h('div',{class:'tr'},h('i',{style:'width:'+(x.v/lmax*100)+'%'})))})):h('p',{class:'sub'},'За этот период выполненных рейсов нет.')));
+  box.append(g);
+  drawLine(lc,p0,t,pp0);
+}
+function drawLine(card,p0,t,pp0){
+  card.textContent='';
+  const weekly=rPeriod<=90,step=rPeriod===30?3:7;
+  const buckets=[];
+  if(weekly){for(let d=p0;d<t;d=addDays(d,step))buckets.push({a:d,b:addDays(d,step)})}
+  else{const s=new Date(t.getFullYear(),t.getMonth()-11,1);for(let i=0;i<12;i++)buckets.push({a:new Date(s.getFullYear(),s.getMonth()+i,1),b:new Date(s.getFullYear(),s.getMonth()+i+1,1)})}
+  const shift=weekly?rPeriod:365;
+  const val=(a,b)=>sumRev(a,b);
+  const cur=buckets.map(x=>val(x.a,x.b)),prv=buckets.map(x=>val(addDays(x.a,-shift),addDays(x.b,-shift)));
+  card.append(h('div',{class:'ct'},h('div',null,h('h3',null,'Выручка по времени'),h('span',{class:'sub'},weekly?(step===3?'по 3 дня':'по неделям'):'по месяцам')),h('div',{class:'key'},h('span',null,h('i'),'Этот период'),h('span',null,h('i',{class:'d'}),'Прошлый'))));
+  const wrap=h('div',{class:'chart'});card.append(wrap);
+  const W=Math.max(260,wrap.clientWidth||card.clientWidth-32||600),H=190,L=6,Rp=46,T=10,B=24;
+  const max=Math.max(1,...cur,...prv);const nice=(()=>{const p=Math.pow(10,Math.floor(Math.log10(max)));for(const m of [1,2,2.5,5,10])if(m*p>=max)return m*p})();
+  const n=buckets.length;const x=i=>L+(n<=1?0:i*(W-L-Rp)/(n-1));const y=v=>T+(1-v/nice)*(H-T-B);
+  const pathOf=arr=>{let d='';arr.forEach((v,i)=>{const px=x(i),py=y(v);if(!i)d+='M'+px+' '+py;else{const ppx=x(i-1),ppy=y(arr[i-1]),cx=(ppx+px)/2;d+=' C'+cx+' '+ppy+' '+cx+' '+py+' '+px+' '+py}});return d};
+  let s='<svg viewBox="0 0 '+W+' '+H+'" height="'+H+'" role="img" aria-label="График выручки">';
+  for(const f of [0,.5,1]){const yy=y(nice*f);s+='<line x1="'+L+'" x2="'+(W-Rp)+'" y1="'+yy+'" y2="'+yy+'" stroke="var(--line)" stroke-dasharray="'+(f?'3 4':'0')+'"/><text x="'+(W-Rp+6)+'" y="'+(yy+4)+'" font-size="11" fill="var(--faint)">'+(f?krub(nice*f).replace(' ₽',''):'0')+'</text>'}
+  s+='<path d="'+pathOf(cur)+' L'+x(n-1)+' '+y(0)+' L'+x(0)+' '+y(0)+'Z" fill="var(--accent)" opacity=".12"/>';
+  s+='<path d="'+pathOf(prv)+'" fill="none" stroke="var(--faint)" stroke-width="1.6" stroke-dasharray="4 4"/>';
+  s+='<path d="'+pathOf(cur)+'" fill="none" stroke="var(--accent)" stroke-width="2.4"/>';
+  const lblEvery=Math.ceil(n/6);
+  buckets.forEach((b,i)=>{if(i%lblEvery===0||i===n-1){const tx=weekly?fDay.format(b.a):fMonY.format(b.a).replace('.','');s+='<text x="'+x(i)+'" y="'+(H-6)+'" font-size="11" fill="var(--faint)" text-anchor="'+(i===0?'start':i===n-1?'end':'middle')+'">'+tx+'</text>'}});
+  if(hoverI!=null&&hoverI<n){s+='<line x1="'+x(hoverI)+'" x2="'+x(hoverI)+'" y1="'+T+'" y2="'+(H-B)+'" stroke="var(--muted)" stroke-dasharray="2 3"/><circle cx="'+x(hoverI)+'" cy="'+y(cur[hoverI])+'" r="5" fill="var(--accent)" stroke="var(--surface)" stroke-width="2"/>'}
+  else s+='<circle cx="'+x(n-1)+'" cy="'+y(cur[n-1])+'" r="4.5" fill="var(--accent)" stroke="var(--surface)" stroke-width="2"/>';
+  s+='</svg>';wrap.innerHTML=s;
+  if(hoverI!=null&&hoverI<n){const b=buckets[hoverI];const lab=weekly?fDay.format(b.a)+' – '+fDay.format(addDays(b.b,-1)):cap(fMonth.format(b.a));
+    const tip=h('div',{class:'ctip',style:'left:'+Math.min(Math.max(x(hoverI),80),W-80)+'px'},h('div',null,lab),h('div',null,'Этот: ',h('b',null,rub(cur[hoverI]))),h('div',{style:'opacity:.75'},'Прошлый: ',h('b',null,rub(prv[hoverI]))));wrap.append(tip)}
+  const pick=e=>{const r=wrap.getBoundingClientRect();const px=(e.clientX-r.left)*(W/r.width);let best=0,bd=1e9;for(let i=0;i<n;i++){const d=Math.abs(x(i)-px);if(d<bd){bd=d;best=i}}if(best!==hoverI){hoverI=best;drawLine(card,p0,t,pp0)}};
+  wrap.addEventListener('pointermove',pick);wrap.addEventListener('pointerdown',pick);
+  wrap.addEventListener('pointerleave',e=>{if(e.pointerType==='mouse'){hoverI=null;drawLine(card,p0,t,pp0)}});
+}
+
+/* =============== SETTINGS =============== */
+function renderSettings(){
+  const box=$('#v-settings');box.textContent='';
+  box.append(h('div',{class:'vhead'},h('div',null,h('div',{class:'eyebrow'},'Кентавр'),h('h1',null,'Настройки'))));
+  const g=h('div',{class:'grid',style:'max-width:620px'});
+  const sv=set();
+  const num=id=>h('input',{class:'field',inputmode:'numeric',id,value:nf.format(sv[id.slice(2)]||0)});
+  const nm=h('input',{class:'field',id:'s_name',value:sv.name||''}),goal=num('s_goal'),mn=num('s_minRate'),tg=num('s_targetRate'),tr=num('s_trucks'),pd=num('s_payDays');
+  const pn=v=>parseFloat(String(v).replace(/\s/g,''))||0;
+  g.append(h('div',{class:'card'},h('div',{class:'ct'},h('h3',null,'Цели и ставки')),h('div',{class:'form'},
+    fl('Как к тебе обращаться',nm),fl('Цель выручки в месяц, ₽',goal),h('div',{class:'f2'},fl('Минимум, ₽/км',mn),fl('Цель, ₽/км',tg)),h('div',{class:'f2'},fl('Тралов в парке',tr),fl('Оплата через, дней',pd)),
+    h('button',{type:'button',class:'btn',onclick:()=>{Object.assign(state.settings,{name:nm.value.trim(),goal:pn(goal.value)||DEF_SET.goal,minRate:pn(mn.value)||DEF_SET.minRate,targetRate:pn(tg.value)||DEF_SET.targetRate,trucks:Math.min(40,Math.max(1,Math.round(pn(tr.value))||DEF_SET.trucks)),payDays:Math.round(pn(pd.value))||DEF_SET.payDays});saveSettings();toast('Сохранено')}},'Сохранить'))));
+  if(cloud){
+    const status=syncErr?['bad','Нет связи с сервером. Всё сохранится, когда связь появится.']:syncOk?['ok','Синхронизация включена · '+new Date(syncOk).toLocaleTimeString('ru-RU',{hour:'2-digit',minute:'2-digit'})]:['','Подключаюсь…'];
+    const ki=h('input',{class:'field',id:'keyIn',placeholder:'XXXX-XXXX-XXXX-XXXX-XXXX',autocapitalize:'characters',autocomplete:'off',spellcheck:'false'});
+    g.append(h('div',{class:'card'},h('div',{class:'ct'},h('h3',null,'Синхронизация и доступ'),h('span',{class:'pill '+status[0]},status[0]==='ok'?'вкл':status[0]==='bad'?'нет связи':'…')),
+      h('p',{class:'sub',style:'margin:0'},status[1]),
+      h('div',{class:'keybox'},h('span',{class:'sub'},'Ключ компании'),h('b',null,fmtKey(key))),
+      h('p',{class:'sub',style:'margin:0 0 10px'},'Введи этот ключ на компьютере или дай диспетчеру — у всех будут одни и те же заявки. Посторонним не показывай.'),
+      h('div',{class:'f2'},h('button',{type:'button',class:'btn ghost',onclick:()=>{navigator.clipboard&&navigator.clipboard.writeText(fmtKey(key)).then(()=>toast('Ключ скопирован'),()=>toast('Выдели ключ и скопируй'))}},'Скопировать'),h('span')),
+      h('div',{class:'sec'},'Войти по другому ключу'),
+      h('div',{style:'display:grid;grid-template-columns:minmax(0,1fr) auto;gap:8px'},ki,h('button',{type:'button',class:'btn',onclick:()=>{const k=normKey(ki.value);if(k.length<16){toast('Ключ слишком короткий');return}key=fmtKey(k);lsSet('crm_key',key);lastSync=0;lsSet('crm_since',0);queueAll();sync().then(()=>{renderSettings();toast(syncErr?'Ключ сохранён, загружу при связи':'Готово, данные загружены')})}},'Войти'))));
+  }
+  const demoN=state.loads.filter(l=>l.demo).length;
+  g.append(h('div',{class:'card'},h('div',{class:'ct'},h('h3',null,'Пример')),h('p',{class:'sub',style:'margin:0 0 10px'},demoN?'Сейчас в приложении есть пример: '+demoN+' заявок. Удали его, когда начнёшь вести свои.':'Можно заполнить приложение примером, чтобы посмотреть, как всё выглядит.'),
+    demoN?h('button',{type:'button',class:'btn danger',onclick:clearDemo},'Удалить пример'):h('button',{type:'button',class:'btn ghost',onclick:loadDemo},'Показать на примере')));
+  box.append(g);
+}
+
+/* =============== demo =============== */
+function loadDemo(){
+  const t=today(),D=n=>ymd(addDays(t,n)),now=Date.now(),ago=n=>now-n*864e5;
+  const C=[['ООО «СтройТехМаш»','Игорь, логист','+7 917 000-11-22'],['ТД «КамАгроСнаб»','Марина','+7 927 000-33-44'],['ООО «УралДорСтрой»','Сергей Петрович','+7 912 000-55-66'],['ИП Хабибуллин','Ринат','+7 987 000-77-88'],['АО «ТатНефтеМаш»','Отдел снабжения','+7 855 000-99-00'],['ООО «ВолгаКран»','Алексей','+7 903 000-12-34']];
+  const cl=C.map((c,i)=>({id:'demo_c'+i,name:c[0],contact:c[1],phone:c[2],notes:i===0?[{at:ago(2),text:'Обещал экскаватор на Москву в конце месяца'}]:[],createdAt:ago(120-i*10),demo:true}));
+  const L=[
+   [0,'Набережные Челны','Москва','Экскаватор 32 т',115000,1080,'paid',-40,-38,null,'regular',1],[1,'Казань','Екатеринбург','Трактор 14 т',96000,880,'paid',-33,-31,null,'ati',2],
+   [2,'Пермь','Уфа','Каток 12 т',58000,520,'paid',-26,-25,null,'ati',3],[0,'Набережные Челны','Самара','Бульдозер 25 т',52000,410,'paid',-19,-18,null,'regular',4],
+   [3,'Ульяновск','Казань','Комбайн, шир. 3,6 м',41000,240,'paid',-12,-11,null,'call',5],[4,'Альметьевск','Оренбург','Буровая установка 38 т',89000,640,'done',-9,-7,-1,'regular',6],
+   [5,'Москва','Нижний Новгород','Автокран 30 т',62000,420,'done',-5,-4,10,'ati',7],[1,'Набережные Челны','Пенза','Трактор 10 т',57000,560,'paid',-3,-2,null,'ati',8],
+   [2,'Екатеринбург','Тюмень','Экскаватор 22 т',45000,330,'road',-1,1,null,'ati',9],[0,'Набережные Челны','Санкт-Петербург','Грейдер 18 т, шир. 3,2 м',245000,1830,'road',-2,2,null,'regular',1],
+   [3,'Казань','Чебоксары','Погрузчик 9 т',23000,150,'ok',1,1,null,'call',2],[4,'Альметьевск','Самара','Ёмкость 26 т, шир. 4 м',72000,520,'ok',3,4,null,'regular',3],
+   [5,'Нижний Новгород','Москва','Кран 25 т',47000,420,'talk',4,5,null,'ati',null],[2,'Уфа','Челябинск','Каток 10 т',36000,400,'talk',6,7,null,'ati',null],
+   [1,'Набережные Челны','Казань','Трактор 8 т',22000,240,'found',5,5,null,'ati',null],[3,'Ижевск','Пермь','Экскаватор 20 т',40000,290,'found',8,9,null,'ati',null],
+   [0,'Самара','Волгоград','Бульдозер 30 т',95000,830,'lost',-15,-13,null,'ati',null],[5,'Москва','Тверь','Кран 16 т',30000,180,'lost',-8,-8,null,'ati',null],
+   [4,'Альметьевск','Москва','Насос 20 т',118000,1050,'paid',-50,-48,null,'regular',4],[1,'Казань','Пермь','Сеялка, шир. 3,5 м',63000,560,'paid',-61,-60,null,'ati',5],
+   [2,'Екатеринбург','Казань','Экскаватор 24 т',110000,940,'paid',-75,-73,null,'ati',6],[3,'Набережные Челны','Уфа','Трактор 12 т',38000,330,'paid',-88,-87,null,'call',7]];
+  const loads=L.map((x,i)=>{const [ci,from,to,cargo,rate,km,stage,ld,ud,pay,source,truck]=x;const sa=stage==='found'?ago(1):stage==='talk'?ago(i%2?4:1):ago(Math.max(0,-ud));
+    return {id:'demo_l'+i,from,to,cargo,clientId:'demo_c'+ci,rate,km,stage,loadDate:D(ld),unloadDate:D(ud),payDue:pay==null?(stage==='done'?D(ud+14):''):D(pay),source,truck:truck?String(truck):'',note:'',createdAt:ago(Math.max(1,-ld+3)),stageAt:sa,demo:true}});
+  state.clients=state.clients.filter(c=>!c.demo).concat(cl);state.loads=state.loads.filter(l=>!l.demo).concat(loads);
+  saveLocal();if(cloud){for(const c of cl)queue('clients',c.id,strip(c));for(const l of loads)queue('loads',l.id,strip(l))}
+  renderAll();toast('Пример загружен. Удалить его можно в настройках');
+}
+function clearDemo(){
+  const dl=state.loads.filter(l=>l.demo),dc=state.clients.filter(c=>c.demo);
+  state.loads=state.loads.filter(l=>!l.demo);state.clients=state.clients.filter(c=>!c.demo);saveLocal();
+  for(const l of dl)queue('loads',l.id,null,true);for(const c of dc)queue('clients',c.id,null,true);
+  renderAll();toast('Пример удалён');
+}
+
+/* =============== render & boot =============== */
+function render(v){if(v==='home')renderHome();else if(v==='pipe')renderPipe();else if(v==='clients')renderClients();else if(v==='reports')renderReports();else if(v==='settings')renderSettings()}
+let renderQueued=false;
+function renderAll(){if(renderQueued)return;renderQueued=true;requestAnimationFrame(()=>{renderQueued=false;if(drag&&drag.active)return;drawNav();render(view)})}
+let rw=innerWidth;addEventListener('resize',()=>{if(Math.abs(innerWidth-rw)>40){rw=innerWidth;if(view==='reports'||view==='home')render(view)}});
+
+document.documentElement.lang='ru';
+applyTheme();
+const s0=lsGet(LS,{});state.loads=s0.loads||[];state.clients=s0.clients||[];state.settings=Object.assign({},DEF_SET,s0.settings||{});state.ready=true;
+if(API){
+  cloud=true;if(!key){key=genKey();lsSet('crm_key',key)}
+  const f='crm_up_'+normKey(key).slice(0,6);if(!lsGet(f,false)){queueAll();lsSet(f,true)}
+  sync();setInterval(()=>{if(document.visibilityState==='visible')sync()},30000);
+  document.addEventListener('visibilitychange',()=>{if(document.visibilityState==='visible')sync()});addEventListener('online',()=>sync());
+}
+try{navigator.storage&&navigator.storage.persist&&navigator.storage.persist()}catch(e){}
+nav(location.hash.slice(1)&&['home','pipe','clients','reports','settings'].includes(location.hash.slice(1))?location.hash.slice(1):view);
+window.__crm={state,loadDemo,moveTo,nav};
+})();
+</script>
+
+<script>if("serviceWorker" in navigator){addEventListener("load",()=>navigator.serviceWorker.register("sw.js").catch(()=>{}))}</script>
+</body>
+</html>
