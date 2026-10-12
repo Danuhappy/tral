@@ -486,7 +486,7 @@ body.sheet-open{overflow:hidden}
 .seg.place button{flex:1}
 .lbl{display:block;font-size:14px;color:var(--muted);font-weight:500;margin-bottom:6px}
 .axrows{display:flex;flex-direction:column;gap:8px}
-.axrow{display:grid;grid-template-columns:24px minmax(0,1fr) minmax(0,1fr) 44px;gap:8px;align-items:end}
+.axrow{display:grid;grid-template-columns:62px minmax(0,1fr) minmax(0,1fr) 44px;gap:8px;align-items:end}
 .axrow>b{font-size:15px;color:var(--muted);padding-bottom:16px;text-align:center}
 .axrow .lib-del{height:52px}
 label.f.ro .inp{color:var(--muted);background:transparent;border:1px dashed var(--surface-3)}
@@ -496,6 +496,11 @@ label.f.ro .inp{color:var(--muted);background:transparent;border:1px dashed var(
 .axrow>b{padding-bottom:0}
 .axhead{font-size:13px;color:var(--muted);margin-bottom:6px}
 .axhead span:first-child{text-align:center}
+.axrow>b{font-size:13.5px;white-space:nowrap}
+.axrow{grid-template-columns:54px minmax(0,1fr) minmax(0,1fr) 36px;gap:6px}
+.axrow .unit .inp{padding-right:26px;padding-left:12px}
+.axrow .unit span{right:9px}
+.axrow .lib-del{width:36px}
 
 </style>
 
@@ -663,8 +668,8 @@ label.f.ro .inp{color:var(--muted);background:transparent;border:1px dashed var(
       </div>
       <div id="cg_wheels" hidden>
         <h3 class="sub-h">Оси машины</h3>
-        <p class="hint" style="margin:0 0 10px">Колёсная техника давит на трал только через свои колёса. Впиши, где стоит каждая ось (от переда машины) и сколько на неё приходится: это есть в ПТС в строке «распределение массы по осям» или берётся с весов. Масса и центр тяжести посчитаются сами.</p>
-        <div class="axrow axhead"><span>Ось</span><span>От переда машины</span><span>Нагрузка</span><span></span></div>
+        <p class="hint" style="margin:0 0 10px">Колёсная техника давит на трал только через свои колёса. Впиши расстояние от переда машины до первой оси, потом расстояния между осями, и сколько приходится на каждую ось: это есть в ПТС в строке «распределение массы по осям» или берётся с весов. Масса и центр тяжести посчитаются сами.</p>
+        <div class="axrow axhead"><span></span><span>Расстояние</span><span>Нагрузка на ось</span><span></span></div>
         <div class="axrows" id="cg_axles"></div>
         <button class="btn small" type="button" id="cg_axAdd" style="margin-top:8px">+ Ось</button>
         <p class="hint" id="cg_axSum" style="margin:10px 0 0"></p>
@@ -2274,8 +2279,9 @@ function renderCargoKind(){
   $("cg_m").readOnly=wh; $("cg_m").closest("label").classList.toggle("ro",wh);
   if(wh){
     const ax=CARGO.axles||[], box=$("cg_axles"), typing=box.contains(document.activeElement) && box.children.length===ax.length;
-    if(!typing) box.innerHTML = ax.map((a,i)=>`<div class="axrow"><b>${i+1}</b>
-      <div class="unit"><input class="inp num" data-axr="${i}.x" value="${esc(a.x??"")}" inputmode="decimal" aria-label="Ось ${i+1}: от переда машины"><span>м</span></div>
+    const gap=i=> Math.round((num(ax[i].x)-(i? num(ax[i-1].x) : 0))*1000)/1000;
+    if(!typing) box.innerHTML = ax.map((a,i)=>`<div class="axrow"><b>${i? `${i}–${i+1}` : "Перед–1"}</b>
+      <div class="unit"><input class="inp num" data-axr="${i}.g" value="${esc(gap(i))}" inputmode="decimal" aria-label="${i? `Между осями ${i} и ${i+1}` : "От переда машины до 1-й оси"}"><span>м</span></div>
       <div class="unit"><input class="inp num" data-axr="${i}.m" value="${esc(a.m??"")}" inputmode="decimal" placeholder="из ПТС" aria-label="Ось ${i+1}: нагрузка"><span>т</span></div>
       ${ax.length>1?`<button type="button" class="lib-del" data-axdel="${i}" aria-label="Убрать ось ${i+1}"><svg viewBox="0 0 24 24" width="18" height="18" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" aria-hidden="true"><path d="M6 6l12 12M18 6 6 18"/></svg></button>`:"<span></span>"}</div>`).join("");
     const M=cargoAxSum(), w=cargoWheels({kind:"wheels",axles:ax,len:CARGO.l,dir:"fwd"});
@@ -2370,8 +2376,12 @@ $("cg_kind").addEventListener("click",e=>{ const b=e.target.closest("button"); i
   CARGO.kind=b.dataset.v; if(CARGO.kind==="wheels" && !(CARGO.axles&&CARGO.axles.length)) CARGO.axles=defaultAxles();
   saveCargo(); cargoToAxles(false); });
 $("cg_dir").addEventListener("click",e=>{ const b=e.target.closest("button"); if(!b) return; CARGO.dir=b.dataset.v; saveCargo(); cargoToAxles(false); });
-$("cg_axles").addEventListener("input",e=>{ const k=e.target.dataset.axr; if(!k) return; const [i,f]=k.split(".");
-  CARGO.axles[+i][f]= e.target.value.trim()===""? "" : num(e.target.value); saveCargo(); cargoToAxles(false); });
+$("cg_axles").addEventListener("input",e=>{ const k=e.target.dataset.axr; if(!k) return; const [i,f]=k.split("."), ax=CARGO.axles;
+  if(f==="g"){ // distances between neighbouring axles; positions are kept as running totals
+    const gaps=ax.map((a,j)=> num(a.x)-(j? num(ax[j-1].x) : 0)); gaps[+i]=num(e.target.value);
+    let acc=0; ax.forEach((a,j)=>{ acc+=gaps[j]; a.x=Math.round(acc*1000)/1000; });
+  } else ax[+i][f]= e.target.value.trim()===""? "" : num(e.target.value);
+  saveCargo(); cargoToAxles(false); });
 $("cg_axles").addEventListener("click",e=>{ const d=e.target.closest("[data-axdel]"); if(!d) return; CARGO.axles.splice(+d.dataset.axdel,1); saveCargo(); cargoToAxles(false); });
 $("cg_axAdd").addEventListener("click",()=>{ const ax=CARGO.axles=CARGO.axles||[]; if(ax.length>=6){ toast("Не больше 6 осей"); return; }
   const last=ax.length? num(ax[ax.length-1].x) : 0; ax.push({x:Math.round((last+1.4)*100)/100, m:""}); saveCargo(); cargoToAxles(false); });
@@ -2779,14 +2789,19 @@ function panelTitle(el){
   if(el.querySelector("#b_on")) return "Обратка";
   const h=el.querySelector("h2"); return h? h.textContent.trim() : "Панель";
 }
-const panelItems = tab => [...panelBox(tab).children].filter(e=>e.dataset.pid);
+const panelItems = tab => [...panelBox(tab).children].filter(e=>e.dataset.pid && !e.hidden);
 function applyOrder(tab){
   const box=panelBox(tab), saved=LAYOUT[tab]; if(!box||!Array.isArray(saved)) return;
   const items=panelItems(tab), byId=new Map(items.map(e=>[e.dataset.pid,e]));
   saved.forEach(pid=>{ const el=byId.get(pid); if(el){ box.appendChild(el); byId.delete(pid); } });
   byId.forEach(el=>box.appendChild(el));
 }
+/* permit tab: blocks the user asked to remove */
+function hidePermitExtras(){
+  [$("p_split"),$("p_regions"),$("p_req")].forEach(el=>{ if(!el) return; const box=el.closest("details.fold")||el.closest(".card"); if(box) box.hidden=true; });
+}
 function initLayout(){
+  hidePermitExtras();
   RE_TABS.forEach(tab=>{ const box=panelBox(tab); if(!box) return; [...box.children].forEach((el,i)=>{ if(el.tagName!=="SCRIPT") el.dataset.pid=tab+"-"+i; }); applyOrder(tab); });
 }
 function renderReList(){
