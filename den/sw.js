@@ -1,5 +1,5 @@
-/* Мой день: offline cache + push, version 01e6d9bd */
-const CACHE="moyden-01e6d9bd";
+/* Мой день: offline cache + push, version 2a94ea45 */
+const CACHE="moyden-2a94ea45";
 const CORE=["./","index.html","config.js","manifest.webmanifest","icons/icon-192.png","icons/icon-512.png","icons/apple-touch-icon.png","icons/favicon-32.png"];
 self.addEventListener("install",e=>{ e.waitUntil(caches.open(CACHE).then(c=>c.addAll(CORE)).then(()=>self.skipWaiting())); });
 self.addEventListener("activate",e=>{ e.waitUntil(caches.keys().then(ks=>Promise.all(ks.filter(k=>k.startsWith("moyden-")&&k!==CACHE&&k!=="moyden-cfg").map(k=>caches.delete(k)))).then(()=>self.clients.claim())); });
@@ -8,6 +8,8 @@ self.addEventListener("fetch",e=>{
   const url=new URL(req.url);
   if(url.origin===location.origin&&url.pathname.endsWith("/config.js")){
     e.respondWith(fetch(req,{cache:"no-store"}).then(r=>{ const cp=r.clone(); caches.open(CACHE).then(c=>c.put(req,cp)); return r; }).catch(()=>caches.match(req)));
+  } else if(url.origin===location.origin&&(req.mode==="navigate"||url.pathname.endsWith("/")||url.pathname.endsWith(".html"))){
+    e.respondWith(fetch(req,{cache:"no-store"}).then(r=>{ if(r&&r.ok){ const cp=r.clone(); caches.open(CACHE).then(c=>c.put(req,cp)); } return r; }).catch(()=>caches.match(req,{ignoreSearch:true}).then(h=>h||caches.match("index.html"))));
   } else if(url.origin===location.origin){
     e.respondWith(caches.match(req,{ignoreSearch:true}).then(hit=>{
       const net=fetch(req).then(r=>{ if(r&&r.ok){ const cp=r.clone(); caches.open(CACHE).then(c=>c.put(req,cp)); } return r; }).catch(()=>hit);
