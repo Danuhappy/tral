@@ -1,5 +1,5 @@
-/* Мой день: offline cache + push, version a80802b9 */
-const CACHE="moyden-a80802b9";
+/* Мой день: offline cache + push, version 01e6d9bd */
+const CACHE="moyden-01e6d9bd";
 const CORE=["./","index.html","config.js","manifest.webmanifest","icons/icon-192.png","icons/icon-512.png","icons/apple-touch-icon.png","icons/favicon-32.png"];
 self.addEventListener("install",e=>{ e.waitUntil(caches.open(CACHE).then(c=>c.addAll(CORE)).then(()=>self.skipWaiting())); });
 self.addEventListener("activate",e=>{ e.waitUntil(caches.keys().then(ks=>Promise.all(ks.filter(k=>k.startsWith("moyden-")&&k!==CACHE&&k!=="moyden-cfg").map(k=>caches.delete(k)))).then(()=>self.clients.claim())); });
