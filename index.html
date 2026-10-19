@@ -2039,14 +2039,24 @@ function renderCargoForm(){
       <div class="fields">
         ${wh.length?"":`<label class="f">Масса<div class="unit"><input class="inp num" data-c="m" value="${esc(c.m)}" inputmode="decimal"><span>т</span></div></label>`}
         <label class="f">Длина<div class="unit"><input class="inp num" data-c="len" value="${esc(c.len)}" inputmode="decimal"><span>м</span></div></label>
-        <label class="f">Передний край груза от края гуська<div class="unit"><input class="inp num" data-c="pos" value="${esc(c.pos)}" inputmode="decimal"><span>м</span></div></label>
-        ${wh.length?"":`<label class="f">Центр тяжести от переда<div class="unit"><input class="inp num" data-c="cg" value="${esc(c.cg??"")}" placeholder="середина" inputmode="decimal"><span>м</span></div></label>`}
+        <label class="f">Высота груза<div class="unit"><input class="inp num" data-c="h" value="${esc(i===0? (CARGO.h??"") : (c.h??""))}" inputmode="decimal"><span>м</span></div></label>
+        ${wh.length?"":`<label class="f">Центр тяжести<div class="unit"><input class="inp num" data-c="cg" value="${esc(c.cg??"")}" placeholder="середина" inputmode="decimal"><span>м</span></div></label>`}
+        <label class="f full">Передний край груза от края гуська<div class="unit"><input class="inp num" data-c="pos" value="${esc(c.pos)}" inputmode="decimal"><span>м</span></div></label>
       </div>
       <div class="ruler-h"><span>гусёк</span><span>площадка</span></div>
       <input type="range" data-c="range" min="0" max="${maxPos.toFixed(2)}" step="0.05" value="${Math.min(num(c.pos),maxPos)}" aria-label="Сдвинуть груз по тралу" style="--step:${(rg.gooseLen/room*100).toFixed(1)}%">
-      <p class="hint" style="margin:6px 0 0">${placeText(c,rg)}</p>
+      <p class="hint cargo-hint" style="margin:6px 0 0">${cargoHint(c,i)}</p>
     </div>`;
   }).join("");
+}
+/* height of a load above the road: its own height + the level it stands on (upper gooseneck if any part is on it) */
+const fH = n => (Math.round(n*100)/100).toLocaleString("ru-RU");
+function itemH(c,i){ return num(i===0? CARGO.h : c.h); }
+function itemStand(c){ return onGoose(c)? (num(AX.r.gh)||1.45) : (num(AX.r.deckH)||0.9); }
+function itemTop(c,i){ const h=itemH(c,i); return h>0? h+itemStand(c) : 0; }
+function cargoHint(c,i){
+  const rg=trailerGeo(AX.r), top=itemTop(c,i);
+  return placeText(c,rg) + (top>0? ` Высота с тралом ${fH(top)} м${top>4?`, выше 4 м на ${fH(top-4)} м`:""}.` : " Впиши высоту груза, чтобы посчитать высоту с тралом.");
 }
 /* where the cargo stands: on the gooseneck, on the deck, or across the step */
 function placeText(c,rg){
@@ -2083,15 +2093,24 @@ function axSVG(ax,res){
   s+=`<text x="${(X(pStart)+X(pEnd))/2}" y="${RY-10}" text-anchor="middle" font-size="14" fill="var(--muted)">площадка ${f1(rg.platLen)}</text>`;
   s+=`<text x="${X(pEnd)}" y="${RY+24}" text-anchor="end" font-size="16" fill="var(--muted)">${f1(rg.gooseLen+rg.platLen)} м</text>`;
   const level = x => x < pStart-0.05 ? gH : G-24;       // standing level under a point
+  const vs = (G-24-14)/Math.max(3.6, ...ax.cargo.map((c,i)=>itemH(c,i)));   // px per metre of height
+  let best=null;
   ax.cargo.forEach((c,i)=>{
     const xa=xk+cargoX(c,rg), xb=xa+num(c.len), ya=level(xa+0.05), yb=level(xb-0.05), wh=cargoWheels(c);
-    const h=Math.min(100,40+cargoMass(c)*1.4), lift=wh.length? wr*2+2 : 0, col=CARGO_COLORS[i%CARGO_COLORS.length];
+    const ih=itemH(c,i), lift=wh.length? wr*2+2 : 0, col=CARGO_COLORS[i%CARGO_COLORS.length];
+    const h = ih>0? Math.max(24, Math.min(Math.min(ya,yb)-12, ih*vs) - lift) : Math.min(100,40+cargoMass(c)*1.4);
+    const top=Math.min(ya,yb)-lift-h; if(ih>0 && (!best || itemTop(c,i)>best.t)) best={t:itemTop(c,i), y:top};
     s+=`<path d="M${X(xa)},${ya-lift} L${X(xb)},${yb-lift} L${X(xb)},${yb-lift-h} L${X(xa)},${ya-lift-h} Z" fill="${col}" opacity=".92"/>`;
     s+=`<text x="${(X(xa)+X(xb))/2}" y="${(ya+yb)/2-lift-h/2+7}" text-anchor="middle" font-size="20" font-weight="700" fill="#06120B">${f1(cargoMass(c))} т</text>`;
     wh.forEach(w=>{ const x=xa+w.u, y=level(x); s+=`<circle cx="${X(x)}" cy="${y-wr-1}" r="${wr}" fill="#0B0F0D" stroke="${col}" stroke-width="4"/>`; });
     const cx=xa+cargoCgX(c), cy=(ya+(yb-ya)*cargoCgX(c)/Math.max(0.1,num(c.len)))-lift;
     s+=`<path d="M${X(cx)-6},${cy-6} L${X(cx)+6},${cy-6} L${X(cx)},${cy+3} Z" fill="#06120B"/>`;
   });
+  if(best){ const xr=VW-14, y0=G+wr;
+    s+=`<line x1="${xr}" y1="${y0}" x2="${xr}" y2="${best.y}" stroke="${best.t>4?"var(--bad)":"var(--muted)"}" stroke-width="1.5"/>`;
+    s+=`<path d="M${xr-5},${best.y+7} L${xr},${best.y} L${xr+5},${best.y+7} M${xr-5},${y0-7} L${xr},${y0} L${xr+5},${y0-7}" fill="none" stroke="${best.t>4?"var(--bad)":"var(--muted)"}" stroke-width="1.5"/>`;
+    s+=`<line x1="${xr-40}" y1="${best.y}" x2="${xr}" y2="${best.y}" stroke="${best.t>4?"var(--bad)":"var(--muted)"}" stroke-width="1" stroke-dasharray="3 3"/>`;
+    s+=`<text x="${xr-8}" y="${best.y+20}" text-anchor="end" font-size="18" font-weight="700" paint-order="stroke" stroke="var(--surface)" stroke-width="5" fill="${best.t>4?"var(--bad)":"var(--ink)"}">${fH(best.t)} м</text>`; }
   const wheel=(x,u,raised)=>`<circle cx="${X(x)}" cy="${G-(raised?10:0)}" r="${wr}" fill="${raised?"var(--surface-2)":"#0B0F0D"}" stroke="${raised?"var(--muted)":utilColor(u)}" stroke-width="4" ${raised?'stroke-dasharray="4 3"':''}/>`;
   const g=res.groups, gT=g.filter(x=>x.key==="trailer");
   tg.front.forEach(x=> s+=wheel(x,g[0].util));
@@ -2112,7 +2131,8 @@ function renderAx(){
   const warn = !bad && res.maxUtil>0.9;
   const box=$("a_verdict"); box.className="verdict "+(bad?"v-bad":warn?"v-ok":"v-good");
   $("a_state").textContent = bad? "Перегруз" : warn? "На пределе" : "В норме";
-  $("a_total").textContent = `Полная масса ${f1(res.total)} т из ${f1(res.gross)} т · груз ${f1(res.cargoM)} т`;
+  const DH=loadDims();
+  $("a_total").innerHTML = `Полная масса ${f1(res.total)} т из ${f1(res.gross)} т · груз ${f1(res.cargoM)} т`+(DH.H>0&&num(DH.h)>0? ` · высота <b style="color:${DH.H>4?"var(--bad)":"inherit"}">${fH(DH.H)} м</b>`:"");
   $("a_svg").innerHTML = axSVG(AX,res);
   const bar=u=>`<span class="bar"><span style="width:${Math.min(100,u*100)}%;background:${utilColor(u)}"></span></span>`;
   const item=(name,rule,big,sub,u)=>`<div class="axi"><div class="axi-l"><b>${name}</b><small>${esc(rule)}</small></div><div class="axi-r"><b style="color:${u==null?"var(--ink)":utilColor(u)}">${big}</b><small>${sub}</small>${u==null?"":bar(u)}</div></div>`;
@@ -2225,11 +2245,13 @@ $("tab-axles").addEventListener("input",e=>{
   const card=el.closest(".cargo"); if(!card||!el.dataset.c) return;
   const i=+card.dataset.i, c=AX.cargo[i];
   if (el.dataset.c==="name"){ c.name=el.value; if(i===0){ CARGO.name=el.value; saveCargo(); } saveAx(); return; }
-  if (el.dataset.c==="range"){ c.pos=Math.round(num(el.value)*100)/100; card.querySelector('[data-c="pos"]').value=c.pos; card.querySelector(".cargo .hint:last-child").textContent=placeText(c,trailerGeo(AX.r)); axChanged(false); return; }
+  if (el.dataset.c==="range"){ c.pos=Math.round(num(el.value)*100)/100; card.querySelector('[data-c="pos"]').value=c.pos; card.querySelector(".cargo-hint").textContent=cargoHint(c,i); axChanged(false); return; }
   c[el.dataset.c]= el.dataset.c==="cg" && el.value.trim()==="" ? "" : num(el.value);
-  if (el.dataset.c==="pos"){ const rg=card.querySelector('[data-c="range"]'); rg.value=c.pos; card.querySelector(".cargo .hint:last-child").textContent=placeText(c,trailerGeo(AX.r)); }
+  if (el.dataset.c==="pos"){ const rg=card.querySelector('[data-c="range"]'); rg.value=c.pos; card.querySelector(".cargo-hint").textContent=cargoHint(c,i); }
   if (el.dataset.c==="len"){ const rg=card.querySelector('[data-c="range"]'), g=trailerGeo(AX.r); rg.max=Math.max(0,g.gooseLen+g.platLen-c.len).toFixed(2); }
-  if (i===0 && ["m","len","cg"].includes(el.dataset.c)){ CARGO[el.dataset.c==="len"?"l":el.dataset.c]=c[el.dataset.c]; saveCargo(); renderCargoCard(); }
+  if (i===0 && el.dataset.c==="h") CARGO.h=c.h;
+  if (el.dataset.c==="h"){ card.querySelector(".cargo-hint").textContent=cargoHint(c,i); }
+  if (i===0 && ["m","len","cg","h"].includes(el.dataset.c)){ CARGO[el.dataset.c==="len"?"l":el.dataset.c]=c[el.dataset.c]; saveCargo(); renderCargoCard(); }
   axChanged(false);
 });
 $("a_cargo").addEventListener("click",e=>{
@@ -2239,7 +2261,7 @@ $("a_cargo").addEventListener("click",e=>{
 $("a_add").addEventListener("click",()=>{
   if (AX.cargo.length>=6){ toast("Не больше 6 грузов"); return; }
   const used = AX.cargo.reduce((a,c)=>Math.max(a,num(c.pos)+num(c.len)),0);
-  const g=trailerGeo(AX.r); AX.cargo.push({name:"Груз "+(AX.cargo.length+1), kind:"solid", m:5, len:2, pos:Math.min(used+0.2, Math.max(0,g.gooseLen+g.platLen-2))});
+  const g=trailerGeo(AX.r); AX.cargo.push({name:"Груз "+(AX.cargo.length+1), kind:"solid", m:5, len:2, pos:Math.round(Math.min(used+0.2, Math.max(0,g.gooseLen+g.platLen-2))*100)/100});
   axChanged(true);
 });
 function addFromLib(id){
@@ -2324,7 +2346,7 @@ function renderCargoCard(){
   const res=axCalc(AX), D=loadDims(), H=D.H, W=D.W, L=num(AX.r.trainLen)+res.overhang, type=cargoType();
   const row=(ok,a,b)=>`<div class="check"><span class="ic ${ok?"ok":"no"}">${ok?"✓":"!"}</span><div><b>${a}</b><div class="hint">${b}</div></div></div>`;
   $("cg_out").innerHTML = !num(CARGO.m)&&!num(CARGO.l) ? `<p class="hint" style="margin:0">Впиши размеры и массу, и они сами появятся в «Осях», «Разрешении» и «Расчёте».</p>` :
-    row(H<=4,`Высота с тралом ${f1(H)} м${D.many?" (по самому высокому грузу)":onGoose(AX.cargo[0])?" (часть на гуське)":""}`, H<=4?"до 4 м, в норме":`выше 4 м на ${f1(H-4)} м`)
+    row(H<=4,`Высота с тралом ${fH(H)} м${D.many?" (по самому высокому грузу)":onGoose(AX.cargo[0])?" (часть на гуське)":""}`, H<=4?"до 4 м, в норме":`выше 4 м на ${fH(H-4)} м`)
     + row(W<=2.55,`Ширина ${f1(W)} м${D.many?" (по самому широкому)":""}`, W<=2.55?"до 2,55 м, в норме":`шире 2,55 м на ${f1(W-2.55)} м`)
     + row(L<=20&&res.overhang<=2,`Длина автопоезда ${f1(L)} м`, res.overhang>2?`свес ${f1(res.overhang)} м`:(L<=20?"до 20 м, в норме":"длиннее 20 м"))
     + row(res.grossUtil<=1 && !res.groups.some(g=>g.util>1),`Полная масса ${f1(res.total)} т`, res.groups.some(g=>g.util>1)?"перегруз по осям, смотри «Оси»":res.grossUtil<=1?`норма ${f1(res.gross)} т`:`больше нормы на ${f1(res.total-res.gross)} т`)
@@ -2375,7 +2397,7 @@ function syncDerived(){
 function cargoToAxles(place){
   if(!AX.cargo.length) AX.cargo.push({pos:0});
   const c=AX.cargo[0];
-  Object.assign(c,{name:CARGO.name||"Груз", kind:CARGO.kind||"solid", dir:CARGO.dir||"fwd", axles:JSON.parse(JSON.stringify(CARGO.axles||[])), m:CARGO.kind==="wheels"? cargoAxSum() : num(CARGO.m), len:num(CARGO.l), cg:CARGO.cg});
+  Object.assign(c,{name:CARGO.name||"Груз", kind:CARGO.kind||"solid", dir:CARGO.dir||"fwd", axles:JSON.parse(JSON.stringify(CARGO.axles||[])), m:CARGO.kind==="wheels"? cargoAxSum() : num(CARGO.m), len:num(CARGO.l), cg:CARGO.cg, h:num(CARGO.h), w:num(CARGO.w)});
   if(c.pos==null) c.pos=trailerGeo(AX.r).gooseLen;
   const g=trailerGeo(AX.r), platLen=g.gooseLen+g.platLen;
   if(place) bestPos(0); else c.pos=Math.max(0,Math.min(num(c.pos), Math.max(0,platLen-c.len)));
