@@ -1829,6 +1829,7 @@ const TRACTORS = {
   t64l:{name:"Тягач 6×4 лёгкий (класс КАМАЗ)", frontMass:4.4, rearMass:3.3, frontAxles:1, fsp:0, A:2.84, rearAxles:2, rsp:1.32, s:0.45, kingMax:16},
   t42:{name:"Тягач 4×2, 2 оси", frontMass:4.8, rearMass:2.7, frontAxles:1, fsp:0, A:3.7, rearAxles:1, rsp:0, s:0.55, kingMax:12},
   t84:{name:"Тягач 8×4, 4 оси", frontMass:7.2, rearMass:4.6, frontAxles:2, fsp:1.8, A:4.8, rearAxles:2, rsp:1.4, s:0.5, kingMax:30},
+  c7h:{name:"SINOTRUK Sitrak C7H 4×2 (как в OsiOk)", frontMass:5, rearMass:3, frontAxles:1, fsp:0, A:3.9, rearAxles:1, rsp:0, s:1.14, kingMax:0},
   custom:{name:"Свой тягач"}
 };
 const TRAILERS = {
@@ -1837,6 +1838,7 @@ const TRAILERS = {
   r5:{name:"Трал 5 осей, раздвижной", mass:18, king0:7, goose:3.4, gl:3.8, gh:1.45, plat:10.5, deckH:0.95, a1:9.8, n:5, sp:1.36, lift:0, ext:0, wheels:2, dual:true, kingMax:24, trainLen:22.5},
   r6:{name:"Трал 6 осей", mass:22, king0:8.5, goose:3.5, gl:3.9, gh:1.45, plat:11.5, deckH:1.0, a1:10.2, n:6, sp:1.36, lift:0, ext:0, wheels:2, dual:true, kingMax:25, trainLen:24},
   r4m:{name:"Модульный 4 оси, 4 колеса на оси", mass:20, king0:7, goose:3.5, gl:3.9, gh:1.45, plat:10.0, deckH:1.0, a1:9.8, n:4, sp:1.51, lift:0, ext:0, wheels:4, dual:false, kingMax:25, trainLen:22},
+  h5:{name:"Спецприцеп 9942H5 (как в OsiOk)", mass:9.3, king0:2.48, goose:2.36, gl:3.2, gh:1.2, plat:12.92, deckH:0.9, a1:6.64, n:4, sp:1.36, sps:[2.51,1.36,2.51], lift:0, ext:0, wheels:2, dual:true, kingMax:0, trainLen:19.5},
   custom:{name:"Свой трал"}
 };
 const T_FIELDS = [
@@ -1864,7 +1866,7 @@ const R_FIELDS = [
 const CARGO_COLORS = ["var(--amber)","#6CB6FF","#A68BF0","#F08DB4","#8A9A92","#E08A5B"];
 
 function presetT(k){ const p=Object.assign({},TRACTORS[k]); delete p.name; return p; }
-function presetR(k){ const p=Object.assign({},TRAILERS[k]); delete p.name; return p; }
+function presetR(k){ const p=JSON.parse(JSON.stringify(TRAILERS[k])); delete p.name; return p; }
 function newAx(){ return {v:3, tp:"t64", rp:"r4", t:presetT("t64"), r:presetR("r4"), road:"10", custom:{on:false,front:9,rear:8,trailer:7,gross:44}, train:null,
   cargo:[{name:"Бульдозер (пример)", kind:"solid", m:15, len:5, pos:5.6}]}; }
 function fixR(r){ if(!r) return r; if(r.gl==null||r.gl==="") r.gl=Math.round((num(r.goose)+0.4)*10)/10; if(r.gh==null||r.gh==="") r.gh=1.45; return r; }
